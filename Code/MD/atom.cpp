@@ -21,6 +21,10 @@ void Atom::setVelocity(vec3 &v){
     velocity = v;
 }
 
+void Atom::addVelocity(vec3 &v){
+    velocity += v;
+}
+
 void Atom::setForce(vec3 &f){
     force = f;
 }

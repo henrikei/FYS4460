@@ -55,6 +55,15 @@ void System::generate(){
             }
         }
     }
+    // Remove translational drift
+    vec3 velocitySum = zeros(3);
+    for (int i = 0; i < nAtoms; i++){
+        velocitySum =+ atoms[i]->getVelocity();
+    }
+    velocitySum = -velocitySum/nAtoms;
+    for (int i = 0; i < nAtoms; i++){
+        atoms[i]->addVelocity(velocitySum);
+    }
 }
 
 void System::writeState(string fn){
@@ -90,16 +99,17 @@ void System::integrate(double endtime, double timestep){
     calculateForce(atoms, nAtoms);
     for (int i = 0; i < nSteps; i++){
         for (int j = 0; j < nAtoms; j++){
-            velMidpoint = atoms[j]->getVelocity() + atoms[j]->getForce()*dt/(2*atoms[j]->getMass());
+            velMidpoint = atoms[j]->getVelocity() + atoms[j]->getForce()*dt/2;
+            atoms[j]->setVelocity(velMidpoint);
             newPos = atoms[j]->getPosition() + velMidpoint*dt;
-            newPos(0) = fmod(newPos(0) + boxLength, boxLength);
-            newPos(1) = fmod(newPos(1) + boxLength, boxLength);
-            newPos(2) = fmod(newPos(2) + boxLength, boxLength);
+            newPos(0) = fmod(newPos(0) + 5*boxLength, boxLength);
+            newPos(1) = fmod(newPos(1) + 5*boxLength, boxLength);
+            newPos(2) = fmod(newPos(2) + 5*boxLength, boxLength);
             atoms[j]->setPosition(newPos);
         }
         calculateForce(atoms, nAtoms);
         for (int j = 0; j < nAtoms; j++){
-            newVel = velMidpoint + atoms[j]->getForce()*dt/(2*atoms[j]->getMass());
+            newVel = atoms[j]->getVelocity() + atoms[j]->getForce()*dt/2;
             atoms[j]->setVelocity(newVel);
         }
         stringstream outName;

@@ -14,6 +14,7 @@ public:
     Atom(string &, double &, vec3 &, vec3 &);
     void setPosition(vec3 &);
     void setVelocity(vec3 &);
+    void addVelocity(vec3 &);
     void setForce(vec3 &);
     void addForce(vec3 &);
     vec3 getPosition();
