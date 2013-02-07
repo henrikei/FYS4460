@@ -16,6 +16,19 @@ System::System(string a, int N, double m, double b, double T)
     atomMass = m; // In atomic units
     dist = b;
     temperature = T;
+    minimalImageConv = zeros(3,27);
+    double boxLength = nAtomsPerDim*dist;
+    int counter = 0;
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 3; j++){
+            for (int k = 0; k < 3; k++){
+                minimalImageConv(0,counter) = (i-1)*boxLength;
+                minimalImageConv(1,counter) = (j-1)*boxLength;
+                minimalImageConv(2,counter) = (k-1)*boxLength;
+                counter += 1;
+            }
+        }
+    }
 }
 
 
@@ -29,11 +42,11 @@ void System::generate(){
     vec3 dr = zeros(3);
     int counter = 0;
     for (int i = 0; i < nAtomsPerDim; i++){
-        r(0) = (i+1)*dist;
+        r(0) = i*dist;
         for (int j = 0; j < nAtomsPerDim; j++){
-            r(1) = (j+1)*dist;
+            r(1) = j*dist;
             for (int k = 0; k < nAtomsPerDim; k++){
-                r(2) = (k+1)*dist;
+                r(2) = k*dist;
                 v = velocityStdDev*randn(3);
                 atoms[counter] = new Atom(atomType, atomMass, r, v);
                 counter += 1;
@@ -123,14 +136,23 @@ void System::calculateForce(Atom **a, int n){
     int nAtoms = n;
     vec3 initForce = zeros(3);
     vec3 radialVec;
+    vec3 radialVecTest;
     double radialDist;
+    double radialDistTest;
     for (int i = 0; i < nAtoms; i++){
         atoms[i]->setForce(initForce);
     }
     for (int i = 0; i < nAtoms; i++){
         for (int j = i + 1; j < nAtoms; j++){
-            radialVec = atoms[i]->getPosition() - atoms[j]->getPosition();
-            radialDist = sqrt(dot(radialVec,radialVec));
+            radialDist = nAtomsPerDim*dist;
+            for (int k = 0; k < 27; k++){
+                radialVecTest = atoms[i]->getPosition() - atoms[j]->getPosition() + minimalImageConv.col(k);
+                radialDistTest = sqrt(dot(radialVecTest,radialVecTest));
+                if (radialDistTest <= radialDist){
+                    radialVec = radialVecTest;
+                    radialDist = radialDistTest;
+                }
+            }
             initForce = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
             atoms[i]->addForce(initForce);
             initForce = -initForce;

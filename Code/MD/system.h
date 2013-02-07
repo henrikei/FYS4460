@@ -2,9 +2,11 @@
 #define SYSTEM_H
 
 #include<iostream>
+#include<armadillo>
 #include"atom.h"
 
 using namespace std;
+using namespace arma;
 
 class System
 {
@@ -15,6 +17,7 @@ public:
     void integrate(double, double);
     void calculateForce(Atom **, int);
     void writeVelHist();
+    mat minimalImageConv;
 private:
     string atomType;
     int nAtomsPerDim;

@@ -10,9 +10,9 @@ using namespace arma;
 
 int main()
 {
-    System test("Ar", 8, 39.948, 1.7246, 2);
+    System test("Ar", 7, 39.948, 1.7246, 2);
     test.generate();
-    test.integrate(0.05,0.0001);
+    test.integrate(0.1,0.001);
     test.writeVelHist();
     return 0;
 }
