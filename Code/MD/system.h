@@ -11,11 +11,11 @@ using namespace arma;
 class System
 {
 public:
-    System(string, int, double, double, double);
+    System(string, int, double, double, double, double, double);
     void generate();
     void writeState(string);
-    void integrate(double, double);
-    void calculateForce(Atom **, int);
+    void integrate();
+    void calculateForce(int);
     void writeVelHist();
     mat minimalImageConv;
 private:
@@ -24,7 +24,9 @@ private:
     double atomMass;
     double dist;
     double temperature;
-    Atom **atoms;
+    double timeEnd;
+    double timeStep;
+    vector<Atom*> atoms;
 };
 
 #endif // SYSTEM_H

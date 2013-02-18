@@ -10,9 +10,18 @@ using namespace arma;
 
 int main()
 {
-    System test("Ar", 7, 39.948, 1.7246, 2);
+    // Input in SI units
+    string atomType = "Ar";
+    int nAtomsPerDim = 7;
+    double mass = 39.948*1.66E-27;
+    double cellDistance = 5.260E-10;
+    double temperature = 2000;
+    double endTime = 1.0E-12;
+    double timeStep = 1.0E-14;
+
+    System test("Ar", nAtomsPerDim, mass, cellDistance, temperature, endTime, timeStep);
     test.generate();
-    test.integrate(0.1,0.001);
+    test.integrate();
     test.writeVelHist();
     return 0;
 }
