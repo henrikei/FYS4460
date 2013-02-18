@@ -4,6 +4,7 @@
 #include<iostream>
 #include<armadillo>
 #include"atom.h"
+#include"cell.h"
 
 using namespace std;
 using namespace arma;
@@ -26,7 +27,9 @@ private:
     double temperature;
     double timeEnd;
     double timeStep;
+    double cellSize;
     vector<Atom*> atoms;
+    vector<Cell*> cells;
 };
 
 #endif // SYSTEM_H

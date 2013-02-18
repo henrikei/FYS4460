@@ -5,12 +5,14 @@ CONFIG -= qt
 SOURCES += main.cpp \
     atom.cpp \
     system.cpp \
-    lib.cpp
+    lib.cpp \
+    cell.cpp
 
 HEADERS += \
     atom.h \
     system.h \
-    lib.h
+    lib.h \
+    cell.h
 
 LIBS += -larmadillo -lblas -llapack
 
