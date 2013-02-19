@@ -15,16 +15,13 @@ int main()
     int nAtomsPerDim = 7;
     double mass = 39.948*1.66E-27;
     double fccLength = 5.260E-10;
-    double temperature = 2000;
-    double endTime = 1.0E-12;
-    double timeStep = 1.0E-14;
+    double temperature = 100;
+    double endTime = 2.0E-12;
+    double timeStep = 0.5E-14;
 
     System test("Ar", nAtomsPerDim, mass, fccLength, temperature, endTime, timeStep);
     test.generate();
-
-
-
-//    test.integrate();
+    test.integrate();
 //    test.writeVelHist();
     return 0;
 }

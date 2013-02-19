@@ -16,9 +16,12 @@ public:
     void generate();
     void writeState(string);
     void integrate();
-    void calculateForce(int);
+    void calculateForce();
+    void populateCells();
+    double getKineticEnergy();
+    double getPotentialEnergy();
     void writeVelHist();
-    mat minimalImageConv;
+    void writeEnergy(ofstream &, double);
 private:
     string atomType;
     int nAtomsPerDim;
@@ -28,6 +31,7 @@ private:
     double timeEnd;
     double timeStep;
     double cellSize;
+    int nCells;
     vector<Atom*> atoms;
     vector<Cell*> cells;
 };

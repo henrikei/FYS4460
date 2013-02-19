@@ -26,20 +26,6 @@ System::System(string a, int N, double m, double b, double T, double tEnd, doubl
     timeEnd = tEnd/t0;
     timeStep = tStep/t0;
     cellSize = 2.5;
-
-    minimalImageConv = zeros(3,27);
-    double boxLength = nAtomsPerDim*dist;
-    int counter = 0;
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            for (int k = 0; k < 3; k++){
-                minimalImageConv(0,counter) = (i-1)*boxLength;
-                minimalImageConv(1,counter) = (j-1)*boxLength;
-                minimalImageConv(2,counter) = (k-1)*boxLength;
-                counter += 1;
-            }
-        }
-    }
 }
 
 
@@ -91,7 +77,7 @@ void System::generate(){
     int nCellsPerDim = (int) (nAtomsPerDim*dist/cellSize);
     // redefine cellSize
     cellSize = nAtomsPerDim*dist/nCellsPerDim;
-    int nCells = nCellsPerDim*nCellsPerDim*nCellsPerDim;
+    nCells = nCellsPerDim*nCellsPerDim*nCellsPerDim;
     ivec3 positionIndices;
     for (int i = 0; i < nCellsPerDim; i++){
         for (int j = 0; j < nCellsPerDim; j++){
@@ -138,29 +124,7 @@ void System::generate(){
             }
         }
     }
-
-//    cout << cells.at(36)->neighbours.size() << endl;
-//    cout << cells.size() << endl;
-//    for (int i = 0; i < 26; i++){
-//        cout << cells.at(36)->neighbours.at(i)->getPositionIndices()(0) << "  " << cells.at(36)->neighbours.at(i)->getPositionIndices()(1)
-//             << "  " << cells.at(36)->neighbours.at(i)->getPositionIndices()(2) << endl;
-//    }
-
-    // add atoms to cells
-    for (int i = 0; i < nCells; i++){
-        for (int j = 0; j < nAtoms; j++){
-            ivec3 cellIndices = cells.at(i)->getPositionIndices();
-            ivec3 atomIndices;
-            for (int k = 0; k < 3; k++){
-                atomIndices(k) = (int) atoms.at(j)->getPosition()(k)/cellSize;
-            }
-            if (cellIndices(0) <= atomIndices(0) && cellIndices(0) + 1 > atomIndices(0) &&
-                cellIndices(1) <= atomIndices(1) && cellIndices(1) + 1 > atomIndices(1) &&
-                cellIndices(2) <= atomIndices(2) && cellIndices(2) + 1 > atomIndices(2)){
-                cells.at(i)->addAtom(atoms.at(j));
-            }
-        }
-    }
+    populateCells();
 }
 
 void System::writeState(string fn){
@@ -185,14 +149,19 @@ void System::writeState(string fn){
 
 void System::integrate(){
     double boxLength = nAtomsPerDim*dist;
+    double time = 0;
     vec3 velMidpoint;
     vec3 newPos;
     vec3 newVel;
     int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     int nSteps = (int)(timeEnd/timeStep);
+    ofstream energyOut;
+    energyOut.open("out/energy.dat");
+    writeEnergy(energyOut, time);
     writeState("out/state0.xyz");
-    calculateForce(nAtoms);
+    calculateForce();
     for (int i = 0; i < nSteps; i++){
+        time += timeStep;
         for (int j = 0; j < nAtoms; j++){
             velMidpoint = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(velMidpoint);
@@ -202,79 +171,98 @@ void System::integrate(){
             newPos(2) = fmod(newPos(2) + 5*boxLength, boxLength);
             atoms.at(j)->setPosition(newPos);
         }
-        calculateForce(nAtoms);
+        populateCells();
+        calculateForce();
         for (int j = 0; j < nAtoms; j++){
             newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(newVel);
         }
+        writeEnergy(energyOut, time);
         stringstream outName;
         outName << "out/state" << (i+1) << ".xyz";
         writeState(outName.str());
     }
+    energyOut.close();
 }
 
-//void System::calculateForce(int n){
-//    int nAtoms = n;
-//    vec3 initForce = zeros(3);
-//    vec3 radialVec;
-//    vec3 radialVecTest;
-//    double radialDist;
-//    double radialDistTest;
-//    for (int i = 0; i < nAtoms; i++){
-//        atoms.at(i)->setForce(initForce);
-//    }
-//    for (int i = 0; i < nAtoms; i++){
-//        for (int j = i + 1; j < nAtoms; j++){
-//            radialDist = nAtomsPerDim*dist;
-//            for (int k = 0; k < 27; k++){
-//                radialVecTest = atoms.at(i)->getPosition() - atoms.at(j)->getPosition() + minimalImageConv.col(k);
-//                radialDistTest = sqrt(dot(radialVecTest,radialVecTest));
-//                if (radialDistTest <= radialDist){
-//                    radialVec = radialVecTest;
-//                    radialDist = radialDistTest;
-//                }
-//            }
-//            initForce = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
-//            atoms.at(i)->addForce(initForce);
-//            initForce = -initForce;
-//            atoms.at(j)->addForce(initForce);
-//        }
-//    }
-//}
 
-void System::calculateForce(int nCells){
+void System::calculateForce(){
     for (int i = 0; i < nCells; i++){
         vector<Atom*> residents = cells.at(i)->getAtoms();
         vector<Cell*> neighbourCells = cells.at(i)->getNeighbours();
         int nResidents = residents.size();
         int nNeighbourCells = neighbourCells.size();
-        vec3 initForce = zeros(3);
+        vec3 Force = zeros(3);
         vec3 radialVec = zeros(3);
         double radialDist = 0;
         for (int j = 0; j < nResidents; j++){
-            residents.at(j)->setForce(initForce);
+            residents.at(j)->setForce(Force);
         }
         for (int j = 0; j < nResidents; j++){
             for (int k = j + 1; k < nResidents; k++){
                 radialVec = residents.at(j)->getPosition() - residents.at(k)->getPosition();
                 radialDist = sqrt(dot(radialVec, radialVec));
-                initForce = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
-                residents.at(i)->addForce(initForce);
-                initForce = -initForce;
-                residents.at(j)->addForce(initForce);
+                Force = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
+                residents.at(j)->addForce(Force);
+                Force = -Force;
+                residents.at(k)->addForce(Force);
             }
             for (int k = 0; k < nNeighbourCells; k++){
                 vector<Atom*> neighbourAtoms = neighbourCells.at(k)->getAtoms();
                 int nNeighbourAtoms = neighbourAtoms.size();
                 for (int l = 0; l < nNeighbourAtoms; l++){
-                    radialVec = residents.at(j)->getPosition() - neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k);
+                    radialVec = residents.at(j)->getPosition() - (neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k));
                     radialDist = sqrt(dot(radialVec, radialVec));
-                    initForce = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
-                    residents.at(i)->addForce(initForce);
+                    Force = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
+                    residents.at(j)->addForce(Force);
                 }
             }
         }
     }
+}
+
+void System::populateCells(){
+    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
+    for (int i = 0; i < nCells; i++){
+        cells.at(i)->deleteAtoms();
+        for (int j = 0; j < nAtoms; j++){
+            ivec3 cellIndices = cells.at(i)->getPositionIndices();
+            ivec3 atomIndices;
+            for (int k = 0; k < 3; k++){
+                atomIndices(k) = (int) atoms.at(j)->getPosition()(k)/cellSize;
+            }
+            if (cellIndices(0) <= atomIndices(0) && cellIndices(0) + 1 > atomIndices(0) &&
+                cellIndices(1) <= atomIndices(1) && cellIndices(1) + 1 > atomIndices(1) &&
+                cellIndices(2) <= atomIndices(2) && cellIndices(2) + 1 > atomIndices(2)){
+                cells.at(i)->addAtom(atoms.at(j));
+            }
+        }
+    }
+}
+
+double System::getKineticEnergy(){
+    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
+    double kineticEnergy = 0;
+    for (int i = 0; i < nAtoms; i++){
+        vec3 velocity = atoms.at(i)->getVelocity();
+        kineticEnergy += 0.5*atomMass*dot(velocity, velocity);
+    }
+    return kineticEnergy;
+}
+
+double System::getPotentialEnergy(){
+    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
+    vec3 radialVec = zeros(3);
+    double radialDist = 0;
+    double potentialEnergy = 0;
+    for (int i = 0; i < nAtoms; i++){
+        for (int j = i + 1; j < nAtoms; j++){
+            radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
+            radialDist = sqrt(dot(radialVec, radialVec));
+            potentialEnergy += 4*(1/pow(radialDist,12) - 1/pow(radialDist,6));
+        }
+    }
+    return potentialEnergy;
 }
 
 void System::writeVelHist(){
@@ -312,4 +300,8 @@ void System::writeVelHist(){
         ofile << (binLower1 + (i+1)*binSize1)/2 << " " << velx(i)/(nx*binSize1) << " " << vely(i)/(ny*binSize1)
               << " " << velz(i)/(nz*binSize1) << " " << (binLower2 + (i+1)*binSize2)/2 << " " << velMagnitude(i)/(nmag*binSize2) << endl;
     ofile.close();
+}
+
+void System::writeEnergy(ofstream &ofile, double time){
+    ofile << time << "  "  << getKineticEnergy() << "  " << getPotentialEnergy() << endl;
 }

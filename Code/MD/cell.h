@@ -17,10 +17,11 @@ public:
     vector<Cell*> getNeighbours();
     void setDistanceCorrection(const double &, const int &, const int &);
     vec3 getDistanceCorrection(const int &);
+    void deleteAtoms();
+    vector<Cell*> neighbours;
 private:
     ivec3 positionIndices;
     double sideLength;
-    vector<Cell*> neighbours;
     vector<Atom*> atoms;
     mat distanceCorrection;
 };

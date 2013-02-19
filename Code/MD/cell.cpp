@@ -34,3 +34,7 @@ void Cell::setDistanceCorrection(const double &value, const int &i, const int &j
 vec3 Cell::getDistanceCorrection(const int &n){
     return distanceCorrection.col(n);
 }
+
+void Cell::deleteAtoms(){
+    atoms.clear();
+}
