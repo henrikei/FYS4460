@@ -21,19 +21,28 @@ public:
     double getKineticEnergy();
     double getPotentialEnergy();
     void writeVelHist();
-    void writeEnergy(ofstream &, double);
+    void writeObservables(ofstream &, double);
 private:
     string atomType;
     int nAtomsPerDim;
+    int nAtoms;
     double atomMass;
-    double dist;
+    double fccLength;
     double temperature;
+    double pressure;
     double timeEnd;
     double timeStep;
     double cellSize;
     int nCells;
     vector<Atom*> atoms;
     vector<Cell*> cells;
+
+    // Conversion factors
+    double m0;                      // mass
+    double sigma;                   // length
+    double T0;                      // temperature
+    double t0;                      // time
+    double epsilon;                 // energy
 };
 
 #endif // SYSTEM_H

@@ -12,48 +12,49 @@ using namespace arma;
 
 System::System(string a, int N, double m, double b, double T, double tEnd, double tStep)
 {
-    double m0 = 39.948*1.66E-27;
-    double sigma = 3.405E-10;
-    double T0 = 119.8;
-    double t0 = 2.1569E-12;
-    double v0 = sigma/t0;
+    // Scaling factors (in SI)
+    m0 = 39.948*1.66E-27;    // mass
+    sigma = 3.405E-10;       // length
+    T0 = 119.74;              // temperature
+    t0 = 2.1569E-12;         // time
+    epsilon = 1.6531E-21;    // energy
 
     atomType = a;
     nAtomsPerDim = N;
+    nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     atomMass = m/m0;
-    dist = b/sigma;
+    fccLength = b/sigma;
     temperature = T/T0;
     timeEnd = tEnd/t0;
     timeStep = tStep/t0;
-    cellSize = 2.5;
+    cellSize = 3.0;
 }
 
 
 void System::generate(){
     // Initialize atoms with initial positions and velocities
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     double velocityStdDev = sqrt(temperature/atomMass);
     vec3 r = zeros(3);
     vec3 r_mod = zeros(3);
     vec3 v = zeros(3);
     vec3 dr = zeros(3);
     for (int i = 0; i < nAtomsPerDim; i++){
-        r(0) = i*dist;
+        r(0) = i*fccLength;
         for (int j = 0; j < nAtomsPerDim; j++){
-            r(1) = j*dist;
+            r(1) = j*fccLength;
             for (int k = 0; k < nAtomsPerDim; k++){
-                r(2) = k*dist;
+                r(2) = k*fccLength;
                 v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r, v));
-                dr << dist/2 << dist/2 << 0;
+                dr << fccLength/2 << fccLength/2 << 0;
                 r_mod = r + dr;
                 v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
-                dr << 0 << dist/2 << dist/2;
+                dr << 0 << fccLength/2 << fccLength/2;
                 r_mod = r + dr;
                 v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
-                dr << dist/2 << 0 << dist/2;
+                dr << fccLength/2 << 0 << fccLength/2;
                 r_mod = r + dr;
                 v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
@@ -74,9 +75,9 @@ void System::generate(){
     // Initialize cells
 
     // cell positions (position = cell indices (integers))
-    int nCellsPerDim = (int) (nAtomsPerDim*dist/cellSize);
+    int nCellsPerDim = (int) (nAtomsPerDim*fccLength/cellSize);
     // redefine cellSize
-    cellSize = nAtomsPerDim*dist/nCellsPerDim;
+    cellSize = nAtomsPerDim*fccLength/nCellsPerDim;
     nCells = nCellsPerDim*nCellsPerDim*nCellsPerDim;
     ivec3 positionIndices;
     for (int i = 0; i < nCellsPerDim; i++){
@@ -131,7 +132,6 @@ void System::writeState(string fn){
     string filename = fn;
     ofstream ofile;
     ofile.open(filename);
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     ofile << nAtoms << endl;
     ofile << "Lattice of Argon atoms" << endl;
     for (int i = 0; i < nAtoms; i++){
@@ -148,16 +148,15 @@ void System::writeState(string fn){
 }
 
 void System::integrate(){
-    double boxLength = nAtomsPerDim*dist;
+    double boxLength = nAtomsPerDim*fccLength;
     double time = 0;
     vec3 velMidpoint;
     vec3 newPos;
     vec3 newVel;
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     int nSteps = (int)(timeEnd/timeStep);
-    ofstream energyOut;
-    energyOut.open("out/energy.dat");
-    writeEnergy(energyOut, time);
+    ofstream observablesOut;
+    observablesOut.open("out/energy.dat");
+    writeObservables(observablesOut, time);
     writeState("out/state0.xyz");
     calculateForce();
     for (int i = 0; i < nSteps; i++){
@@ -177,16 +176,18 @@ void System::integrate(){
             newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(newVel);
         }
-        writeEnergy(energyOut, time);
+        writeObservables(observablesOut, time);
         stringstream outName;
         outName << "out/state" << (i+1) << ".xyz";
         writeState(outName.str());
+        cout << i << endl;
     }
-    energyOut.close();
+    observablesOut.close();
 }
 
 
 void System::calculateForce(){
+    pressure = 0;
     for (int i = 0; i < nCells; i++){
         vector<Atom*> residents = cells.at(i)->getAtoms();
         vector<Cell*> neighbourCells = cells.at(i)->getNeighbours();
@@ -194,16 +195,19 @@ void System::calculateForce(){
         int nNeighbourCells = neighbourCells.size();
         vec3 Force = zeros(3);
         vec3 radialVec = zeros(3);
-        double radialDist = 0;
+        double radialDist2 = 0;
+        double radialDist6 = 0;
         for (int j = 0; j < nResidents; j++){
             residents.at(j)->setForce(Force);
         }
         for (int j = 0; j < nResidents; j++){
             for (int k = j + 1; k < nResidents; k++){
                 radialVec = residents.at(j)->getPosition() - residents.at(k)->getPosition();
-                radialDist = sqrt(dot(radialVec, radialVec));
-                Force = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
+                radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+                radialDist6 = radialDist2*radialDist2*radialDist2;
+                Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
                 residents.at(j)->addForce(Force);
+                pressure += dot(Force, radialVec);
                 Force = -Force;
                 residents.at(k)->addForce(Force);
             }
@@ -212,17 +216,22 @@ void System::calculateForce(){
                 int nNeighbourAtoms = neighbourAtoms.size();
                 for (int l = 0; l < nNeighbourAtoms; l++){
                     radialVec = residents.at(j)->getPosition() - (neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k));
-                    radialDist = sqrt(dot(radialVec, radialVec));
-                    Force = 24*(2/(pow(radialDist,14)) - 1/pow(radialDist,8))*radialVec;
+                    radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+                    radialDist6 = radialDist2*radialDist2*radialDist2;
+                    Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
                     residents.at(j)->addForce(Force);
+                    pressure += dot(Force, radialVec);
                 }
             }
         }
     }
+    double boxLength = nAtomsPerDim*fccLength;
+    double volume = boxLength*boxLength*boxLength;
+    pressure = pressure/(3*volume);
+    pressure += 2*getKineticEnergy()/(3*volume);
 }
 
 void System::populateCells(){
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     for (int i = 0; i < nCells; i++){
         cells.at(i)->deleteAtoms();
         for (int j = 0; j < nAtoms; j++){
@@ -241,7 +250,6 @@ void System::populateCells(){
 }
 
 double System::getKineticEnergy(){
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     double kineticEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
         vec3 velocity = atoms.at(i)->getVelocity();
@@ -251,22 +259,21 @@ double System::getKineticEnergy(){
 }
 
 double System::getPotentialEnergy(){
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     vec3 radialVec = zeros(3);
     double radialDist = 0;
     double potentialEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
         for (int j = i + 1; j < nAtoms; j++){
             radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
-            radialDist = sqrt(dot(radialVec, radialVec));
-            potentialEnergy += 4*(1/pow(radialDist,12) - 1/pow(radialDist,6));
+            radialDist = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+            double radialDist6 = radialDist*radialDist*radialDist;
+            potentialEnergy += 4*(1/(radialDist6*radialDist6) - 1/(radialDist6));
         }
     }
     return potentialEnergy;
 }
 
 void System::writeVelHist(){
-    int nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
     double velocityStdDev = sqrt(temperature/atomMass);
     double maxVelocity = 4*velocityStdDev;
     int nBins = 100;
@@ -302,6 +309,7 @@ void System::writeVelHist(){
     ofile.close();
 }
 
-void System::writeEnergy(ofstream &ofile, double time){
-    ofile << time << "  "  << getKineticEnergy() << "  " << getPotentialEnergy() << endl;
+void System::writeObservables(ofstream &ofile, double time){
+    ofile << time*t0 << "  "  << getKineticEnergy()*epsilon << "  " << getPotentialEnergy()*epsilon << "  "
+          << (2*getKineticEnergy()/(3*nAtoms))*T0 << "  " << pressure*epsilon/(sigma*sigma*sigma) << endl;
 }
