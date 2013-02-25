@@ -11,6 +11,7 @@ Atom::Atom(string &a, double &m, vec3 &r, vec3 &v)
     position = r;
     velocity = v;
     force = zeros(3);
+    displacement = zeros(3);
 }
 
 void Atom::setPosition(vec3 &r){
@@ -23,6 +24,10 @@ void Atom::setVelocity(vec3 &v){
 
 void Atom::addVelocity(vec3 &v){
     velocity += v;
+}
+
+void Atom::addDisplacement(vec3 &d){
+    displacement += d;
 }
 
 void Atom::setForce(vec3 &f){
@@ -39,6 +44,10 @@ vec3 Atom::getPosition(){
 
 vec3 Atom::getVelocity(){
     return velocity;
+}
+
+vec3 Atom::getDisplacement(){
+    return displacement;
 }
 
 vec3 Atom::getForce(){

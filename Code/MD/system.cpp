@@ -32,7 +32,7 @@ System::System(string a, int N, double m, double b, double T, double tEnd, doubl
 
 
 void System::generate(){
-    // Initialize atoms with initial positions and velocities
+    // Initialize atoms with positions and velocities
     double velocityStdDev = sqrt(temperature/atomMass);
     vec3 r = zeros(3);
     vec3 r_mod = zeros(3);
@@ -44,19 +44,19 @@ void System::generate(){
             r(1) = j*fccLength;
             for (int k = 0; k < nAtomsPerDim; k++){
                 r(2) = k*fccLength;
-                v = velocityStdDev*randn(3);
+                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
                 atoms.push_back(new Atom(atomType, atomMass, r, v));
                 dr << fccLength/2 << fccLength/2 << 0;
                 r_mod = r + dr;
-                v = velocityStdDev*randn(3);
+                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
                 dr << 0 << fccLength/2 << fccLength/2;
                 r_mod = r + dr;
-                v = velocityStdDev*randn(3);
+                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
                 dr << fccLength/2 << 0 << fccLength/2;
                 r_mod = r + dr;
-                v = velocityStdDev*randn(3);
+                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
             }
         }
@@ -64,7 +64,7 @@ void System::generate(){
     // Remove translational drift
     vec3 velocitySum = zeros(3);
     for (int i = 0; i < nAtoms; i++){
-        velocitySum =+ atoms.at(i)->getVelocity();
+        velocitySum += atoms.at(i)->getVelocity();
     }
     velocitySum = -velocitySum/nAtoms;
     for (int i = 0; i < nAtoms; i++){
@@ -74,9 +74,9 @@ void System::generate(){
 
     // Initialize cells
 
-    // cell positions (position = cell indices (integers))
+    // cell positions (positions = cell indices (integers))
     int nCellsPerDim = (int) (nAtomsPerDim*fccLength/cellSize);
-    // redefine cellSize
+    // redefine cellSize to fit size of model box
     cellSize = nAtomsPerDim*fccLength/nCellsPerDim;
     nCells = nCellsPerDim*nCellsPerDim*nCellsPerDim;
     ivec3 positionIndices;
@@ -89,7 +89,7 @@ void System::generate(){
         }
     }
 
-    // add neighbours
+    // add neighbourcells
     imat directionVecs = zeros<imat>(3,26);
     int counter = 0;
     for (int i = 0; i < 3; i++){
@@ -153,9 +153,10 @@ void System::integrate(){
     vec3 velMidpoint;
     vec3 newPos;
     vec3 newVel;
+    vec3 displacement = zeros(3);
     int nSteps = (int)(timeEnd/timeStep);
     ofstream observablesOut;
-    observablesOut.open("out/energy.dat");
+    observablesOut.open("out/observables.dat");
     writeObservables(observablesOut, time);
     writeState("out/state0.xyz");
     calculateForce();
@@ -164,7 +165,9 @@ void System::integrate(){
         for (int j = 0; j < nAtoms; j++){
             velMidpoint = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(velMidpoint);
-            newPos = atoms.at(j)->getPosition() + velMidpoint*timeStep;
+            displacement = velMidpoint*timeStep;
+            newPos = atoms.at(j)->getPosition() + displacement;
+            atoms.at(j)->addDisplacement(displacement);
             newPos(0) = fmod(newPos(0) + 5*boxLength, boxLength);
             newPos(1) = fmod(newPos(1) + 5*boxLength, boxLength);
             newPos(2) = fmod(newPos(2) + 5*boxLength, boxLength);
@@ -220,7 +223,7 @@ void System::calculateForce(){
                     radialDist6 = radialDist2*radialDist2*radialDist2;
                     Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
                     residents.at(j)->addForce(Force);
-                    pressure += dot(Force, radialVec);
+                    pressure += 0.5*dot(Force, radialVec); // pressure across cells are added twice, hence the factor 0.5.
                 }
             }
         }
@@ -273,9 +276,19 @@ double System::getPotentialEnergy(){
     return potentialEnergy;
 }
 
+double System::getMeanSquareDisplacement(){
+    double meanSquareDisplacement = 0;
+    for (int i = 0; i < nAtoms; i++){
+        vec3 displacement = atoms.at(i)->getDisplacement();
+        meanSquareDisplacement += displacement(0)*displacement(0) + displacement(1)*displacement(1) + displacement(2)*displacement(2);
+    }
+    meanSquareDisplacement = meanSquareDisplacement/nAtoms;
+    return meanSquareDisplacement;
+}
+
 void System::writeVelHist(){
     double velocityStdDev = sqrt(temperature/atomMass);
-    double maxVelocity = 4*velocityStdDev;
+    double maxVelocity = 2*velocityStdDev;
     int nBins = 100;
     double binSize1 = 2*maxVelocity/nBins;
     double binSize2 = binSize1/2;
@@ -285,15 +298,18 @@ void System::writeVelHist(){
     int nx = 0; int ny = 0; int nz = 0; int nmag = 0;
     double velMag = 0;
     ofstream ofile;
-    ofile.open("velHist.dat");
+    ofile.open("out/velHist.dat");
     for(int i = 0; i < nBins; i++){
         for(int j = 0; j< nAtoms; j++){
-            if (binLower1 < atoms.at(j)->getVelocity()(0) && atoms.at(j)->getVelocity()(0) <= (binLower1 + binSize1))
+            if (binLower1 < atoms.at(j)->getVelocity()(0) && atoms.at(j)->getVelocity()(0) <= (binLower1 + binSize1)){
                 velx(i) += 1; nx += 1;
-            if (binLower1 < atoms.at(j)->getVelocity()(1) && atoms.at(j)->getVelocity()(1) <= (binLower1 + binSize1))
+            }
+            if (binLower1 < atoms.at(j)->getVelocity()(1) && atoms.at(j)->getVelocity()(1) <= (binLower1 + binSize1)){
                 vely(i) += 1; ny +=1;
-            if (binLower1 < atoms.at(j)->getVelocity()(2) && atoms.at(j)->getVelocity()(2) <= (binLower1 + binSize1))
+            }
+            if (binLower1 < atoms.at(j)->getVelocity()(2) && atoms.at(j)->getVelocity()(2) <= (binLower1 + binSize1)){
                 velz(i) += 1; nz += 1;
+            }
             velMag = sqrt(atoms.at(j)->getVelocity()(0)*atoms.at(j)->getVelocity()(0) + atoms.at(j)->getVelocity()(1)*atoms.at(j)->getVelocity()(1) + atoms.at(j)->getVelocity()(2)*atoms.at(j)->getVelocity()(2));
             if (binLower2 < velMag && velMag <= binLower2 + binSize2)
                 velMagnitude(i) +=1; nmag += 1;
@@ -311,5 +327,5 @@ void System::writeVelHist(){
 
 void System::writeObservables(ofstream &ofile, double time){
     ofile << time*t0 << "  "  << getKineticEnergy()*epsilon << "  " << getPotentialEnergy()*epsilon << "  "
-          << (2*getKineticEnergy()/(3*nAtoms))*T0 << "  " << pressure*epsilon/(sigma*sigma*sigma) << endl;
+          << (2*getKineticEnergy()/(3*nAtoms))*T0 << "  " << pressure*epsilon/(sigma*sigma*sigma) << "  " << getMeanSquareDisplacement()*sigma*sigma << endl;
 }

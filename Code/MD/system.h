@@ -20,6 +20,7 @@ public:
     void populateCells();
     double getKineticEnergy();
     double getPotentialEnergy();
+    double getMeanSquareDisplacement();
     void writeVelHist();
     void writeObservables(ofstream &, double);
 private:
