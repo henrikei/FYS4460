@@ -44,19 +44,19 @@ void System::generate(){
             r(1) = j*fccLength;
             for (int k = 0; k < nAtomsPerDim; k++){
                 r(2) = k*fccLength;
-                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
+                v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r, v));
                 dr << fccLength/2 << fccLength/2 << 0;
                 r_mod = r + dr;
-                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
+                v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
                 dr << 0 << fccLength/2 << fccLength/2;
                 r_mod = r + dr;
-                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
+                v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
                 dr << fccLength/2 << 0 << fccLength/2;
                 r_mod = r + dr;
-                v = velocityStdDev*2*(randu(3)-0.5*ones(3));
+                v = velocityStdDev*randn(3);
                 atoms.push_back(new Atom(atomType, atomMass, r_mod, v));
             }
         }
@@ -157,9 +157,9 @@ void System::integrate(){
     int nSteps = (int)(timeEnd/timeStep);
     ofstream observablesOut;
     observablesOut.open("out/observables.dat");
+    calculateForce();
     writeObservables(observablesOut, time);
     writeState("out/state0.xyz");
-    calculateForce();
     for (int i = 0; i < nSteps; i++){
         time += timeStep;
         for (int j = 0; j < nAtoms; j++){
@@ -178,6 +178,10 @@ void System::integrate(){
         for (int j = 0; j < nAtoms; j++){
             newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(newVel);
+        }
+        // Apply thermostat
+        for (uint i = 0; i < modifiers.size(); i++){
+            modifiers.at(i)->apply();
         }
         writeObservables(observablesOut, time);
         stringstream outName;
@@ -252,6 +256,22 @@ void System::populateCells(){
     }
 }
 
+void System::addModifier(Modifier *mod){
+    modifiers.push_back(mod);
+}
+
+double System::getTimeStep(){
+    return timeStep;
+}
+
+int System::getNumberOfAtoms(){
+    return nAtoms;
+}
+
+vector<Atom*> System::getAtoms(){
+    return atoms;
+}
+
 double System::getKineticEnergy(){
     double kineticEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
@@ -263,17 +283,21 @@ double System::getKineticEnergy(){
 
 double System::getPotentialEnergy(){
     vec3 radialVec = zeros(3);
-    double radialDist = 0;
+    double radialDist2 = 0;
     double potentialEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
         for (int j = i + 1; j < nAtoms; j++){
             radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
-            radialDist = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
-            double radialDist6 = radialDist*radialDist*radialDist;
+            radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+            double radialDist6 = radialDist2*radialDist2*radialDist2;
             potentialEnergy += 4*(1/(radialDist6*radialDist6) - 1/(radialDist6));
         }
     }
     return potentialEnergy;
+}
+
+double System::getTemperature(){
+    return (2*getKineticEnergy()/(3*nAtoms));
 }
 
 double System::getMeanSquareDisplacement(){
@@ -327,5 +351,5 @@ void System::writeVelHist(){
 
 void System::writeObservables(ofstream &ofile, double time){
     ofile << time*t0 << "  "  << getKineticEnergy()*epsilon << "  " << getPotentialEnergy()*epsilon << "  "
-          << (2*getKineticEnergy()/(3*nAtoms))*T0 << "  " << pressure*epsilon/(sigma*sigma*sigma) << "  " << getMeanSquareDisplacement()*sigma*sigma << endl;
+          << getTemperature()*T0 << "  " << pressure*epsilon/(sigma*sigma*sigma) << "  " << getMeanSquareDisplacement()*sigma*sigma << endl;
 }

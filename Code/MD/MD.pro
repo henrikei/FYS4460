@@ -6,13 +6,19 @@ SOURCES += main.cpp \
     atom.cpp \
     system.cpp \
     lib.cpp \
-    cell.cpp
+    cell.cpp \
+    Modifier/modifier.cpp \
+    Modifier/berendsenthermostat.cpp \
+    Modifier/andersenthermostat.cpp
 
 HEADERS += \
     atom.h \
     system.h \
     lib.h \
-    cell.h
+    cell.h \
+    Modifier/modifier.h \
+    Modifier/berendsenthermostat.h \
+    Modifier/andersenthermostat.h
 
 LIBS += -larmadillo -lblas -llapack
 

@@ -5,6 +5,7 @@
 #include<armadillo>
 #include"atom.h"
 #include"cell.h"
+#include"Modifier/modifier.h"
 
 using namespace std;
 using namespace arma;
@@ -18,8 +19,13 @@ public:
     void integrate();
     void calculateForce();
     void populateCells();
+    void addModifier(Modifier *);
+    double getTimeStep();
+    int getNumberOfAtoms();
+    vector<Atom*> getAtoms();
     double getKineticEnergy();
     double getPotentialEnergy();
+    double getTemperature();
     double getMeanSquareDisplacement();
     void writeVelHist();
     void writeObservables(ofstream &, double);
@@ -37,6 +43,7 @@ private:
     int nCells;
     vector<Atom*> atoms;
     vector<Cell*> cells;
+    vector<Modifier*> modifiers;
 
     // Conversion factors
     double m0;                      // mass
