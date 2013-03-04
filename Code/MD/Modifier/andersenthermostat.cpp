@@ -35,5 +35,6 @@ void AndersenThermostat::apply(){
             }
         }
         time += system->getTimeStep();
+        cout << "Thermo on" << endl;
     }
 }

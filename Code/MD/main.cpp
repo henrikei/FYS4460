@@ -18,12 +18,12 @@ int main()
     int nAtomsPerDim = 8;
     double mass = 39.948*1.66E-27;
     double fccLength = 5.260E-10;
-    double temperature = 495;
+    double temperature = 50;
     double endTime = 4.0E-12;
     double ThermoTurnOffTime = 2.0E-12;
     double timeStep = 1.0E-14;// 4.862E-14;
     string thermostat = "berendsenThermostat";
-    double relaxationTime = 20; // In units of timeSteps
+    double relaxationTime = 10; // In units of timeSteps
 
     System test("Ar", nAtomsPerDim, mass, fccLength, temperature, endTime, timeStep);
 
