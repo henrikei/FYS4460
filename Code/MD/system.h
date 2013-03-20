@@ -16,7 +16,6 @@ public:
     System(string, int, double, double, double, double, double);
     void generate();
     void writeState(string);
-    void readState(string);
     void integrate();
     void calculateForce();
     void populateCells();
