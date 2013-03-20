@@ -10,7 +10,7 @@ int main()
 {
     // Load positions from .xyz file
     ifstream inFile;
-    inFile.open("state300_50K.xyz");
+    inFile.open("state300_10K.xyz");
     if(!inFile) { // file couldn't be opened
           cerr << "Error: file could not be opened" << endl;
           exit(1);
@@ -44,7 +44,7 @@ int main()
     }
 
     // Find distances
-    int nDistances = nAtoms*nAtoms/2;
+    int nDistances = nAtoms*(nAtoms-1)/2;
     vec distances = ones(nDistances)*50*boxLength;
     vec3 distanceVecTest = zeros(3);
     double distanceTest = 0;

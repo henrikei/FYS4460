@@ -74,11 +74,11 @@ void System::generate(){
 
     // Initialize cells
 
-    // cell positions (positions = cell indices (integers))
     int nCellsPerDim = (int) (nAtomsPerDim*fccLength/cellSize);
     // redefine cellSize to fit size of model box
     cellSize = nAtomsPerDim*fccLength/nCellsPerDim;
     nCells = nCellsPerDim*nCellsPerDim*nCellsPerDim;
+    // cell positions (positions = cell indices (integers))
     ivec3 positionIndices;
     for (int i = 0; i < nCellsPerDim; i++){
         for (int j = 0; j < nCellsPerDim; j++){
