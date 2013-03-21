@@ -18,12 +18,12 @@ public:
     void addDisplacement(vec3 &);
     void setForce(vec3 &);
     void addForce(vec3 &);
-    vec3 getPosition();
-    vec3 getVelocity();
-    vec3 getDisplacement();
-    vec3 getForce();
-    double getMass();
-    string getName();
+    vec3& getPosition();
+    vec3& getVelocity();
+    vec3& getDisplacement();
+    vec3& getForce();
+    double& getMass();
+    string& getName();
 private:
     string name;
     double mass;

@@ -38,27 +38,27 @@ void Atom::addForce(vec3 &f){
     force += f;
 }
 
-vec3 Atom::getPosition(){
+vec3& Atom::getPosition(){
     return position;
 }
 
-vec3 Atom::getVelocity(){
+vec3& Atom::getVelocity(){
     return velocity;
 }
 
-vec3 Atom::getDisplacement(){
+vec3& Atom::getDisplacement(){
     return displacement;
 }
 
-vec3 Atom::getForce(){
+vec3& Atom::getForce(){
     return force;
 }
 
-double Atom::getMass(){
+double& Atom::getMass(){
     return mass;
 }
 
-string Atom::getName()
+string& Atom::getName()
 {
     return name;
 }

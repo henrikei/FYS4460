@@ -6,6 +6,8 @@
 using namespace arma;
 using namespace std;
 
+
+// Reads a state file and writes out the distances between all atoms
 int main()
 {
     // Load positions from .xyz file
@@ -14,7 +16,7 @@ int main()
     if(!inFile) { // file couldn't be opened
           cerr << "Error: file could not be opened" << endl;
           exit(1);
-       }
+    }
     int nAtoms;
     string dummy;
     vec3 position;

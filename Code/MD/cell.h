@@ -13,8 +13,8 @@ public:
     void addAtom(Atom*);
     void addNeighbour(Cell*);
     ivec3 getPositionIndices();
-    vector<Atom*> getAtoms();
-    vector<Cell*> getNeighbours();
+    vector<Atom*>& getAtoms();
+    vector<Cell*>& getNeighbours();
     void setDistanceCorrection(const double &, const int &, const int &);
     vec3 getDistanceCorrection(const int &);
     void deleteAtoms();

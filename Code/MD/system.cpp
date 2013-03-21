@@ -147,6 +147,27 @@ void System::writeState(string fn){
     ofile.close();
 }
 
+void System::readState(string fn){
+    string filename = fn;
+    ifstream inFile;
+    string dummy;
+    vec3 position;
+    vec3 velocity;
+    inFile.open(filename);
+    if (!inFile) { // file could not be opened
+        cerr << "Error: file could not be opened" << endl;
+        exit(1);
+    }
+    inFile >> dummy >> dummy >> dummy >> dummy >> dummy;
+    int counter = 0;
+    while (!inFile.eof()){
+        inFile >> dummy >> position[0] >> position[1] >> position[2] >> velocity[0] >> velocity[1] >> velocity[2];
+        atoms.at(counter)->setPosition(position);
+        atoms.at(counter)->setVelocity(velocity);
+    }
+    populateCells();
+}
+
 void System::integrate(){
     double boxLength = nAtomsPerDim*fccLength;
     double time = 0;
@@ -179,7 +200,7 @@ void System::integrate(){
             newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
             atoms.at(j)->setVelocity(newVel);
         }
-        // Apply thermostat
+        // Apply modifiers (here only thermostat)
         for (uint i = 0; i < modifiers.size(); i++){
             modifiers.at(i)->apply();
         }
@@ -196,8 +217,8 @@ void System::integrate(){
 void System::calculateForce(){
     pressure = 0;
     for (int i = 0; i < nCells; i++){
-        vector<Atom*> residents = cells.at(i)->getAtoms();
-        vector<Cell*> neighbourCells = cells.at(i)->getNeighbours();
+        vector<Atom*>& residents = cells.at(i)->getAtoms();
+        vector<Cell*>& neighbourCells = cells.at(i)->getNeighbours();
         int nResidents = residents.size();
         int nNeighbourCells = neighbourCells.size();
         vec3 Force = zeros(3);

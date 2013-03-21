@@ -19,11 +19,11 @@ ivec3 Cell::getPositionIndices(){
     return positionIndices;
 }
 
-vector<Atom*> Cell::getAtoms(){
+vector<Atom*>& Cell::getAtoms(){
     return atoms;
 }
 
-vector<Cell*> Cell::getNeighbours(){
+vector<Cell*>& Cell::getNeighbours(){
     return neighbours;
 }
 

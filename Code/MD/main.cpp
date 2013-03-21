@@ -17,8 +17,8 @@ int main()
     string atomType = "Ar";
     int nAtomsPerDim = 8;
     double mass = 39.948*1.66E-27;
-    double fccLength = 5.260E-10;
-    double temperature = 10;
+    double fccLength = 5.720E-10;
+    double temperature = 0.851*119.74;
     double endTime = 4.0E-12;
     double ThermoTurnOffTime = 2.0E-12;
     double timeStep = 1.0E-14;// 4.862E-14;
