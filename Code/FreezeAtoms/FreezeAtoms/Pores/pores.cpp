@@ -1,12 +1,11 @@
-#include "cylindricalpore.h"
-//#include <string>
+#include "pores.h"
 #include <fstream>
 
-CylindricalPore::CylindricalPore()
+Pores::Pores()
 {
 }
 
-void CylindricalPore::readFile(string inFileName){
+void Pores::readFile(string inFileName){
     vec3 position = zeros(3);
     vec3 velocity = zeros(3);
     ifstream inFile;
@@ -26,19 +25,7 @@ void CylindricalPore::readFile(string inFileName){
     }
 }
 
-void CylindricalPore::make(vec2 center, double radius){
-    vec2 distance;
-    for (int i = 0; i < nAtoms; i++){
-        distance << (positions.at(i)(0) - center(0)) << (positions.at(i)(1) - center(1));
-        if (dot(distance, distance) > radius*radius){
-            free.push_back(false);
-        } else {
-            free.push_back(true);
-        }
-    }
-}
-
-void CylindricalPore::writeFile(string outFileName){
+void Pores::writeFile(string outFileName){
     ofstream outFile;
     outFile.open(outFileName.c_str());
     outFile << nAtoms << endl;
@@ -47,4 +34,8 @@ void CylindricalPore::writeFile(string outFileName){
         outFile << atomType <<"  "<< positions.at(i)(0) <<"  "<< positions.at(i)(1)<<"  "<< positions.at(i)(2) <<"  "
                 << velocities.at(i)(0) <<"  "<< velocities.at(i)(1) <<"  "<< velocities.at(i)(2) <<"  "<< free.at(i) << endl;
     }
+}
+
+void Pores::initializeFree(){
+    free = ones<ivec>(nAtoms);
 }

@@ -3,11 +3,13 @@ CONFIG += console
 CONFIG -= qt
 
 SOURCES += main.cpp \
-    CylindricalPore/pores.cpp \
-    Pores/pores.cpp
+    Pores/pores.cpp \
+    Pores/cylindricalpore.cpp \
+    Pores/circularpores.cpp
 
 HEADERS += \
-    CylindricalPore/pores.h \
-    Pores/pores.h
+    Pores/pores.h \
+    Pores/cylindricalpore.h \
+    Pores/circularpores.h
 
 LIBS += -larmadillo -lblas -llapack

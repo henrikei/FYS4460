@@ -35,7 +35,9 @@ void Atom::setForce(vec3 &f){
 }
 
 void Atom::addForce(vec3 &f){
-    force += f;
+    force(0) += f(0);
+    force(1) += f(1);
+    force(2) += f(2);
 }
 
 vec3& Atom::getPosition(){

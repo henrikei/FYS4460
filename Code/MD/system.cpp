@@ -240,7 +240,7 @@ void System::calculateForce(){
                 residents.at(k)->addForce(Force);
             }
             for (int k = 0; k < nNeighbourCells; k++){
-                vector<Atom*> neighbourAtoms = neighbourCells.at(k)->getAtoms();
+                vector<Atom*>& neighbourAtoms = neighbourCells.at(k)->getAtoms();
                 int nNeighbourAtoms = neighbourAtoms.size();
                 for (int l = 0; l < nNeighbourAtoms; l++){
                     radialVec = residents.at(j)->getPosition() - (neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k));
