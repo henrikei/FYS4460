@@ -1,5 +1,5 @@
 #include <iostream>
-#include "CylindricalPore/cylindricalpore.h"
+#include "Pores/pores.h"
 
 using namespace std;
 
