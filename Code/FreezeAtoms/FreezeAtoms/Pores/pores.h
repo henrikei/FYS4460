@@ -14,14 +14,13 @@ public:
     Pores();
     void readFile(string inFileName);
     void writeFile(string outFileName);
-    void initializeFree();
 protected:
     int nAtoms;
     string text;
     string atomType;
     vector<vec3> positions;
     vector<vec3> velocities;
-    ivec free;
+    vector<int> free;
 };
 
 #endif // PORES_H

@@ -22,6 +22,7 @@ System::System(string a, int N, double m, double b, double T, double tEnd, doubl
     atomType = a;
     nAtomsPerDim = N;
     nAtoms = 4*nAtomsPerDim*nAtomsPerDim*nAtomsPerDim;
+    nAtomsFree = nAtoms;
     atomMass = m/m0;
     fccLength = b/sigma;
     temperature = T/T0;
@@ -142,7 +143,7 @@ void System::writeState(string fn){
         for (int j = 0; j < 3; j++){
             ofile << atoms.at(i)->getVelocity()(j) << " ";
         }
-        ofile << endl;
+        ofile << atoms.at(i)->getFree() << endl;
     }
     ofile.close();
 }
@@ -150,21 +151,31 @@ void System::writeState(string fn){
 void System::readState(string fn){
     string filename = fn;
     ifstream inFile;
+    int nAtomsNew;
+    nAtomsFree = 0;
     string dummy;
     vec3 position;
     vec3 velocity;
+    int free;
     inFile.open(filename);
     if (!inFile) { // file could not be opened
         cerr << "Error: file could not be opened" << endl;
         exit(1);
     }
-    inFile >> dummy >> dummy >> dummy >> dummy >> dummy;
+    inFile >> nAtomsNew >> dummy >> dummy >> dummy >> dummy;
     int counter = 0;
-    while (!inFile.eof()){
-        inFile >> dummy >> position[0] >> position[1] >> position[2] >> velocity[0] >> velocity[1] >> velocity[2];
+    while (counter < nAtoms){
+        inFile >> dummy >> position[0] >> position[1] >> position[2] >> velocity[0] >> velocity[1] >> velocity[2] >> free;
         atoms.at(counter)->setPosition(position);
         atoms.at(counter)->setVelocity(velocity);
+        atoms.at(counter)->setFree(free);
+        counter += 1;
+        if (free){
+            nAtomsFree += 1;
+        }
     }
+    atoms.erase(atoms.begin() + nAtomsNew, atoms.begin() + nAtoms);
+    nAtoms = nAtomsNew;
     populateCells();
 }
 
@@ -184,21 +195,25 @@ void System::integrate(){
     for (int i = 0; i < nSteps; i++){
         time += timeStep;
         for (int j = 0; j < nAtoms; j++){
-            velMidpoint = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
-            atoms.at(j)->setVelocity(velMidpoint);
-            displacement = velMidpoint*timeStep;
-            newPos = atoms.at(j)->getPosition() + displacement;
-            atoms.at(j)->addDisplacement(displacement);
-            newPos(0) = fmod(newPos(0) + 5*boxLength, boxLength);
-            newPos(1) = fmod(newPos(1) + 5*boxLength, boxLength);
-            newPos(2) = fmod(newPos(2) + 5*boxLength, boxLength);
-            atoms.at(j)->setPosition(newPos);
+            if (atoms.at(j)->getFree()){
+                velMidpoint = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
+                atoms.at(j)->setVelocity(velMidpoint);
+                displacement = velMidpoint*timeStep;
+                newPos = atoms.at(j)->getPosition() + displacement;
+                atoms.at(j)->addDisplacement(displacement);
+                newPos(0) = fmod(newPos(0) + 5*boxLength, boxLength);
+                newPos(1) = fmod(newPos(1) + 5*boxLength, boxLength);
+                newPos(2) = fmod(newPos(2) + 5*boxLength, boxLength);
+                atoms.at(j)->setPosition(newPos);
+            }
         }
         populateCells();
         calculateForce();
         for (int j = 0; j < nAtoms; j++){
-            newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
-            atoms.at(j)->setVelocity(newVel);
+            if(atoms.at(j)->getFree()){
+                newVel = atoms.at(j)->getVelocity() + atoms.at(j)->getForce()*timeStep/2;
+                atoms.at(j)->setVelocity(newVel);
+            }
         }
         // Apply modifiers (here only thermostat)
         for (uint i = 0; i < modifiers.size(); i++){
@@ -296,8 +311,10 @@ vector<Atom*> System::getAtoms(){
 double System::getKineticEnergy(){
     double kineticEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
-        vec3 velocity = atoms.at(i)->getVelocity();
-        kineticEnergy += 0.5*atomMass*dot(velocity, velocity);
+        if (atoms.at(i)->getFree()){
+            vec3 velocity = atoms.at(i)->getVelocity();
+            kineticEnergy += 0.5*atomMass*dot(velocity, velocity);
+        }
     }
     return kineticEnergy;
 }
@@ -308,17 +325,19 @@ double System::getPotentialEnergy(){
     double potentialEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
         for (int j = i + 1; j < nAtoms; j++){
-            radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
-            radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
-            double radialDist6 = radialDist2*radialDist2*radialDist2;
-            potentialEnergy += 4*(1/(radialDist6*radialDist6) - 1/(radialDist6));
+            if(atoms.at(i)->getFree() && atoms.at(j)->getFree()){
+                radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
+                radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+                double radialDist6 = radialDist2*radialDist2*radialDist2;
+                potentialEnergy += 4*(1/(radialDist6*radialDist6) - 1/(radialDist6));
+            }
         }
     }
     return potentialEnergy;
 }
 
 double System::getTemperature(){
-    return (2*getKineticEnergy()/(3*nAtoms));
+    return (2*getKineticEnergy()/(3*nAtomsFree));
 }
 
 double System::getMeanSquareDisplacement(){

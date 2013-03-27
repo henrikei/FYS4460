@@ -18,10 +18,12 @@ public:
     void addDisplacement(vec3 &);
     void setForce(vec3 &);
     void addForce(vec3 &);
+    void setFree(int &);
     vec3& getPosition();
     vec3& getVelocity();
     vec3& getDisplacement();
     vec3& getForce();
+    int getFree();
     double& getMass();
     string& getName();
 private:
@@ -31,6 +33,7 @@ private:
     vec3 velocity;
     vec3 displacement;
     vec3 force;
+    int free;
 };
 
 #endif // ATOM_H

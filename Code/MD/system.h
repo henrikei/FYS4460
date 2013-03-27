@@ -34,6 +34,7 @@ private:
     string atomType;
     int nAtomsPerDim;
     int nAtoms;
+    int nAtomsFree;
     double atomMass;
     double fccLength;
     double temperature;
