@@ -245,25 +245,29 @@ void System::calculateForce(){
         }
         for (int j = 0; j < nResidents; j++){
             for (int k = j + 1; k < nResidents; k++){
-                radialVec = residents.at(j)->getPosition() - residents.at(k)->getPosition();
-                radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
-                radialDist6 = radialDist2*radialDist2*radialDist2;
-                Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
-                residents.at(j)->addForce(Force);
-                pressure += dot(Force, radialVec);
-                Force = -Force;
-                residents.at(k)->addForce(Force);
+                if(residents.at(j)->getFree() || residents.at(k)->getFree()){
+                    radialVec = residents.at(j)->getPosition() - residents.at(k)->getPosition();
+                    radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+                    radialDist6 = radialDist2*radialDist2*radialDist2;
+                    Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
+                    residents.at(j)->addForce(Force);
+                    pressure += dot(Force, radialVec);
+                    Force = -Force;
+                    residents.at(k)->addForce(Force);
+                }
             }
             for (int k = 0; k < nNeighbourCells; k++){
                 vector<Atom*>& neighbourAtoms = neighbourCells.at(k)->getAtoms();
                 int nNeighbourAtoms = neighbourAtoms.size();
                 for (int l = 0; l < nNeighbourAtoms; l++){
-                    radialVec = residents.at(j)->getPosition() - (neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k));
-                    radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
-                    radialDist6 = radialDist2*radialDist2*radialDist2;
-                    Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
-                    residents.at(j)->addForce(Force);
-                    pressure += 0.5*dot(Force, radialVec); // pressure across cells are added twice, hence the factor 0.5.
+                    if(residents.at(j)->getFree() || neighbourAtoms.at(l)->getFree()){
+                        radialVec = residents.at(j)->getPosition() - (neighbourAtoms.at(l)->getPosition() + cells.at(i)->getDistanceCorrection(k));
+                        radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
+                        radialDist6 = radialDist2*radialDist2*radialDist2;
+                        Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
+                        residents.at(j)->addForce(Force);
+                        pressure += 0.5*dot(Force, radialVec); // pressure across cells are added twice, hence the factor 0.5.
+                    }
                 }
             }
         }
@@ -325,7 +329,7 @@ double System::getPotentialEnergy(){
     double potentialEnergy = 0;
     for (int i = 0; i < nAtoms; i++){
         for (int j = i + 1; j < nAtoms; j++){
-            if(atoms.at(i)->getFree() && atoms.at(j)->getFree()){
+            if(atoms.at(i)->getFree() || atoms.at(j)->getFree()){
                 radialVec = atoms.at(i)->getPosition() - atoms.at(j)->getPosition();
                 radialDist2 = radialVec(0)*radialVec(0) + radialVec(1)*radialVec(1) + radialVec(2)*radialVec(2);
                 double radialDist6 = radialDist2*radialDist2*radialDist2;
@@ -343,10 +347,12 @@ double System::getTemperature(){
 double System::getMeanSquareDisplacement(){
     double meanSquareDisplacement = 0;
     for (int i = 0; i < nAtoms; i++){
-        vec3 displacement = atoms.at(i)->getDisplacement();
-        meanSquareDisplacement += displacement(0)*displacement(0) + displacement(1)*displacement(1) + displacement(2)*displacement(2);
+        if (atoms.at(i)->getFree()){
+            vec3& displacement = atoms.at(i)->getDisplacement();
+            meanSquareDisplacement += displacement(0)*displacement(0) + displacement(1)*displacement(1) + displacement(2)*displacement(2);
+        }
     }
-    meanSquareDisplacement = meanSquareDisplacement/nAtoms;
+    meanSquareDisplacement = meanSquareDisplacement/nAtomsFree;
     return meanSquareDisplacement;
 }
 

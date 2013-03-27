@@ -28,10 +28,12 @@ void AndersenThermostat::apply(){
         atoms = system->getAtoms();
         nAtoms = system->getNumberOfAtoms();
         for (int i = 0; i < nAtoms; i++){
-            vec3 newVelocity = randn(3)*sqrt(targetTemperature/atoms.at(i)->getMass());
-            double randomCheck = randu();
-            if (randomCheck < 1/tau){
-                atoms.at(i)->setVelocity(newVelocity);
+            if(atoms.at(i)->getFree()){
+                vec3 newVelocity = randn(3)*sqrt(targetTemperature/atoms.at(i)->getMass());
+                double randomCheck = randu();
+                if (randomCheck < 1/tau){
+                    atoms.at(i)->setVelocity(newVelocity);
+                }
             }
         }
         time += system->getTimeStep();

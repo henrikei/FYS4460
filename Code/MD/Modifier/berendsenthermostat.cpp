@@ -27,8 +27,10 @@ void BerendsenThermostat::apply(){
         nAtoms = system->getNumberOfAtoms();
         gamma = sqrt(1 + (targetTemperature/system->getTemperature() - 1)/tau);
         for (int i = 0; i < nAtoms; i++){
-            vec3 newVelocity = gamma*atoms.at(i)->getVelocity();
-            atoms.at(i)->setVelocity(newVelocity);
+            if (atoms.at(i)->getFree()){
+                vec3 newVelocity = gamma*atoms.at(i)->getVelocity();
+                atoms.at(i)->setVelocity(newVelocity);
+            }
         }
         time += system->getTimeStep();
         cout << "Thermo on" << endl;
