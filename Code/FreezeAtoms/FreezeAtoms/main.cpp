@@ -8,10 +8,12 @@ using namespace std;
 
 int main()
 {
-    ReduceDensity reducedensity;
-    reducedensity.readFile("circularPores0.xyz");
-    reducedensity.make(0.5);
-    reducedensity.writeFile("cirularPoresHalfDensity.xyz");
+    ReduceDensity red;
+    double reductionRatio = 0.5;
+    red.readFile("cylindricalPore0.xyz");
+    red.make(reductionRatio);
+    red.writeFile("cylindricalPoreHalfDensity.xyz");
+
 //    double rMin = 20/3.405;
 //    double rMax = 30/3.405;
 //    int nBalls = 20;

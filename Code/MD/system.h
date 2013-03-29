@@ -21,6 +21,7 @@ public:
     void calculateForce();
     void populateCells();
     void addModifier(Modifier *);
+    void addExternalForce(vec3);
     double getTimeStep();
     int getNumberOfAtoms();
     vector<Atom*> getAtoms();
@@ -46,6 +47,7 @@ private:
     vector<Atom*> atoms;
     vector<Cell*> cells;
     vector<Modifier*> modifiers;
+    vec3 extForce;
 
     // Conversion factors
     double m0;                      // mass

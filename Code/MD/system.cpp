@@ -29,6 +29,7 @@ System::System(string a, int N, double m, double b, double T, double tEnd, doubl
     timeEnd = tEnd/t0;
     timeStep = tStep/t0;
     cellSize = 3.0;
+    extForce = zeros(3);
 }
 
 
@@ -151,7 +152,7 @@ void System::writeState(string fn){
 void System::readState(string fn){
     string filename = fn;
     ifstream inFile;
-    int nAtomsNew;
+    int nAtomsNew; // Sometimes state-files with reduced density are read
     nAtomsFree = 0;
     string dummy;
     vec3 position;
@@ -175,6 +176,7 @@ void System::readState(string fn){
         }
     }
     atoms.erase(atoms.begin() + nAtomsNew, atoms.begin() + nAtoms);
+    cout << "Porosity: " << (1 - ((double)(nAtomsNew - nAtomsFree))/((double)nAtoms));
     nAtoms = nAtomsNew;
     populateCells();
 }
@@ -190,7 +192,7 @@ void System::integrate(){
     ofstream observablesOut;
     observablesOut.open("out/observables.dat");
     calculateForce();
-    writeObservables(observablesOut, time);
+    //writeObservables(observablesOut, time);
     writeState("out/state0.xyz");
     for (int i = 0; i < nSteps; i++){
         time += timeStep;
@@ -215,11 +217,11 @@ void System::integrate(){
                 atoms.at(j)->setVelocity(newVel);
             }
         }
-        // Apply modifiers (here only thermostat)
+        // Apply modifiers
         for (uint i = 0; i < modifiers.size(); i++){
             modifiers.at(i)->apply();
         }
-        writeObservables(observablesOut, time);
+        //writeObservables(observablesOut, time);
         stringstream outName;
         outName << "out/state" << (i+1) << ".xyz";
         writeState(outName.str());
@@ -230,7 +232,7 @@ void System::integrate(){
 
 
 void System::calculateForce(){
-    pressure = 0;
+    //pressure = 0;
     for (int i = 0; i < nCells; i++){
         vector<Atom*>& residents = cells.at(i)->getAtoms();
         vector<Cell*>& neighbourCells = cells.at(i)->getNeighbours();
@@ -251,7 +253,7 @@ void System::calculateForce(){
                     radialDist6 = radialDist2*radialDist2*radialDist2;
                     Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
                     residents.at(j)->addForce(Force);
-                    pressure += dot(Force, radialVec);
+                    //pressure = dot(Force, radialVec);
                     Force = -Force;
                     residents.at(k)->addForce(Force);
                 }
@@ -266,16 +268,20 @@ void System::calculateForce(){
                         radialDist6 = radialDist2*radialDist2*radialDist2;
                         Force = (24/radialDist2)*(2/(radialDist6*radialDist6) - 1/radialDist6)*radialVec;
                         residents.at(j)->addForce(Force);
-                        pressure += 0.5*dot(Force, radialVec); // pressure across cells are added twice, hence the factor 0.5.
+                        //pressure += 0.5*dot(Force, radialVec); // pressure across cells are added twice, hence the factor 0.5.
                     }
                 }
             }
+            // Add external force
+            if(residents.at(j)->getFree()){
+                residents.at(j)->addForce(extForce);
+            }
         }
     }
-    double boxLength = nAtomsPerDim*fccLength;
-    double volume = boxLength*boxLength*boxLength;
-    pressure = pressure/(3*volume);
-    pressure += 2*getKineticEnergy()/(3*volume);
+    //double boxLength = nAtomsPerDim*fccLength;
+    //double volume = boxLength*boxLength*boxLength;
+    //pressure = pressure/(3*volume);
+    //pressure += 2*getKineticEnergy()/(3*volume);
 }
 
 void System::populateCells(){
@@ -298,6 +304,10 @@ void System::populateCells(){
 
 void System::addModifier(Modifier *mod){
     modifiers.push_back(mod);
+}
+
+void System::addExternalForce(vec3 F){
+    extForce = F*sigma/epsilon;
 }
 
 double System::getTimeStep(){
