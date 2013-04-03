@@ -1,0 +1,296 @@
+\documentclass[12pt]{article}
+\usepackage[english]{babel}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx, subfigure}
+\usepackage{bm}
+\usepackage[margin=1.25in]{geometry}
+%\usepackage{subfig}
+
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqa}{\begin{eqnarray}}
+\newcommand{\eeqa}{\end{eqnarray}}
+\newcommand{\ben}{\begin{enumerate}}
+\newcommand{\een}{\end{enumerate}}
+\newcommand{\bit}{\begin{itemize}}
+\newcommand{\eit}{\end{itemize}}
+\newcommand{\bce}{\begin{center}}
+\newcommand{\ece}{\end{center}}
+\newcommand{\bo}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\bdi}{\begin{displaymath}}
+\newcommand{\edi}{\end{displaymath}}
+\newcommand{\ud}{\mathrm{d}}
+
+\parindent 0pt
+\parskip 10pt
+
+\topmargin -0.3cm
+
+
+%\renewcommand{\baselinestretch}{1.787} dobbel
+\renewcommand{\baselinestretch}{1.0}
+
+\thispagestyle{plain}
+
+\begin{document}
+
+\title{FYS4460 - Project1: Introductory molecular dynamics modeling}
+\author{Henrik Eiding}
+\date{\today}
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\section{Introduction}
+
+In this project I have developed a molecular dynamics simulator for Argon atoms. Using this simulator, various macroscopic and microscopic properties of the
+atoms have been investigated.
+
+\section{Brief description of the simulator}
+The atoms are initially positioned on a face-centered cubic lattice. The positions of each cell in a $N_x \times N_y \times N_z$ lattice are given by
+\bdi
+\vec{R}_{ijk} = i\hat u_1 + j\hat u_2 + k\hat u_3,
+\edi
+where $i\in\{0,\,\dots,\,N_x-1\}$, $j\in\{0,\,\dots,\,N_y-1\}$ and $k\in\{1,\,\dots,\,N_z-1\}$. The vectors $\hat u_i$ are the unit vectors along the x-, y- and z-directions multiplied
+by the length $b$ of the cell. The positions of the atoms within each cell, measured relative to the origin of the cell, are:
+\begin{eqnarray*}
+ \vec r & = & 0\hat i + 0\hat j + 0\hat k, \\
+ \vec r & = & \frac{b}{2}\hat i + \frac{b}{2}\hat j + 0\hat k, \\
+ \vec r & = & 0\hat i + \frac{b}{2}\hat j + \frac{b}{2}\hat k, \\
+ \vec r & = & \frac{b}{2}\hat i + 0\hat j + \frac{b}{2}\hat k.
+\end{eqnarray*}
+All atoms are given a normally distributed initial velocity with zero average and standard deviation $\sqrt{k_BT/m}$.
+
+In order to simulate an infinitely large system, periodic boundary conditions were introduced.
+
+The Lennard-Jones potential was used to model the forces between the atoms. It is given by:
+\bdi
+U(r) = 4\epsilon\Big[\Big(\frac{\sigma}{r}\Big)^{12} - \Big(\frac{\sigma}{r}\Big)^6\Big],
+\edi
+where $r$ is the distance between the atoms. The following parameter values were used:
+\bdi
+\frac{\epsilon}{k_b} = 119.8\,\mathrm{K}, \qquad \sigma = 3.405\cdot10^{-10}\,\mathrm{m}.
+\edi
+
+The motion of the atoms was calculated with the velocity Verlet algorithm:
+\begin{eqnarray*}
+\vec v_i (t + \Delta t/2) & = & \vec v_i(t) + \frac{\vec F_i(t)}{2m}\Delta t, \\
+\vec r_i (t + \Delta t) & = & \vec r_i(t) + \vec v_i (t + \Delta t/2)\Delta t, \\
+\vec F_i (t + \Delta t) & = & -\nabla_i U_i (\{\vec r\})(t + \Delta t), \\
+\vec v_i (t + \Delta t) & = & \vec v_i (t + \Delta t/2) + \frac{\vec F_i (t + \Delta t)}{2m}\Delta t.
+\end{eqnarray*}
+
+
+
+\section{Results and discussion}
+
+\subsection{Maxwell-Boltzmann distribution}
+From the central limit theorem we know that the magnitude of the velocities should approach the Maxwell-Boltzmann distribution regardless of the inital conditions. This was tested
+by giving all atoms an initial uniformly distributed velocity in each direction. Figures \ref{fig:histState8} and \ref{fig:histState18} shows the distributions of the velocities in the x-direction
+and the magnitude of the velocities after 8 and 18 time steps, respectively. The time steps were set equal to $\Delta t = 1.0\cdot 10^{-14}$ s in these simulations. Clearly, the distributions approach
+the normal distribution and the Maxwell-Boltzmann distribution, as expected.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Velocity in the x-direction.]{
+            \label{fig:histVelState8}
+            \includegraphics[width=0.45\textwidth]{../Results/out1/histVelState8.eps}
+        }\hspace{5mm}
+        \subfigure[Magnitude of the velocity.]{
+           \label{fig:histSpeedState8}
+           \includegraphics[width=0.45\textwidth]{../Results/out1/histSpeedState8.eps}
+        }\\ 
+    \end{center}
+    \caption{Distribution of the velocity in the x-direction and the magnitude of the velocity after 8 time steps. The following parameters were used: $N_x = X_y = N_z = 8$,
+              $\Delta t = 1.0\cdot 10^{-14} s$, $T_{initial} = 300 K$. }
+    \label{fig:histState8}
+\end{figure}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Velocity in the x-direction.]{
+            \label{fig:histVelState18}
+            \includegraphics[width=0.45\textwidth]{../Results/out1/histVelState18.eps}
+        }\hspace{5mm}
+        \subfigure[Magnitude of the velocity.]{
+           \label{fig:histSpeedState18}
+           \includegraphics[width=0.45\textwidth]{../Results/out1/histSpeedState18.eps}
+        }\\ 
+    \end{center}
+    \caption{Distribution of the velocity in the x-direction and the magnitude of the velocity after 18 time steps. The following parameters were used: $N_x = X_y = N_z = 8$,
+              $\Delta t = 1.0\cdot 10^{-14} s$, $T_{initial} = 300 K$.}
+    \label{fig:histState18}
+\end{figure}
+
+
+\subsection{Calculation of energies}
+
+We also wanted to investigate the kinetic, potential and total energy of the system as a function of time. They can easily be calculated by the standard formulas once we know the positions and
+velocities of all the atoms. The simulations in this subsection were performed with $N_x = N_y = N_z = 8$ and $T_{initial} = 300K$. Figure \ref{fig:energies} shows a plot of the kinetic, potential and total
+energy for a timestep $\Delta t = 2\cdot10^{-15}$. On this plot the total energy looks quite stable,\footnote{Except for the initial ``bump'', which I am not able to explain.} and the total energy
+is obviously conserved. Figure \ref{fig:zoom_energy_small_dt} zooms in on the total energy in figure \ref{fig:energies}. We can see that the energy is actually not constant, but it fluctuates about a mean value. My investigations revealed that
+these fluctuations are rather unaffected by the choice of $\Delta t$ as long as it is kept below the critical value, at which the system becomes unstable and blows up. Very close to the critical value,
+the system seems to be stable, but the energy is not conserved. Such a situation is shown in figure \ref{fig:zoom_energy_large_dt} where $\Delta t = 4,80\cdot10^{-14}$ s.
+
+\begin{figure}[!ht]
+ \begin{center}
+  \includegraphics[scale=0.40]{../Results/out2/energies_dt2e-15.eps}
+  \caption{Kinetic, potential and total energy calculated with $\Delta t = 2.0\cdot10^{-15}$ s.}
+  \label{fig:energies}
+ \end{center}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Total energy with $\Delta t = 2\cdot10^{-15}$. (Zoom of figure \ref{fig:energies}.)]{
+            \label{fig:zoom_energy_small_dt}
+            \includegraphics[width=0.45\textwidth]{../Results/out2/tot_energy_dt2e-15.eps}
+        }\hspace{5mm}
+        \subfigure[Total energy with $\Delta t = 4.80\cdot10^{-14}$.]{
+           \label{fig:zoom_energy_large_dt}
+           \includegraphics[width=0.45\textwidth]{../Results/out3/tot_energy_dt4p8e-14.eps}
+        }\\ 
+    \end{center}
+    \caption{Distribution of the velocity in the x-direction and the magnitude of the velocity after 18 time steps.}
+    \label{fig:zoom_energies}
+\end{figure}
+
+
+
+\subsection{Calculation of temperature}
+From the equipartition theorem we know that the temperature is related to the average kinetic energy via the relation
+\bdi
+\langle E_k \rangle = \frac{3}{2}Nk_BT.
+\edi
+From this we can easily calculate the temperature of the system. The timestep has been set to $\Delta t = 2.0\cdot10^{-15}$ in all calculations presented in this subsection.
+
+Figure \ref{fig:tempN8} shows a plot of the temperature as a function of time when $N_x = N_y = N_z = 8$.
+We observe that the temperature at which the system equilibrates is different from the initial value at which we started
+the calculations. This is due to the fact that the system stores the total energy in a specific balance between kinetic and potential energy. As it turns out, our initial conditions did not
+match this balance, and thus the system had to run for some time before it settled at its natural balance.
+
+It is interesting to see how the temperature fluctuations vary with system size. Plots of $T(t)$ with $N_x,\,N_y,\,N_z$ equal to 8, 10 and 14 are shown in figure \ref{fig:temp_fluct}.
+Not surprisingly, we see that the fluctuations decrease with system size.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[$N_x = N_y = N_z = 8$]{
+            \label{fig:tempN8}
+            \includegraphics[width=0.45\textwidth]{../Results/out6/temp_N8.eps}
+        }\hspace{5mm}
+        \subfigure[Comparison of fluctuations for $N_x,\,N_y,\,N_z$ equal to 8, 10 and 14.]{
+           \label{fig:temp_fluct}
+           \includegraphics[width=0.45\textwidth]{../Results/temp_fluct.eps}
+        }\\ 
+    \end{center}
+    \caption{Temperature as a function of time for various system sizes.}
+    \label{fig:temp}
+\end{figure}
+
+
+
+
+\subsection{Pressure versus temperature}
+
+For each simulation the system equilibrates at some temperature and pressure. We wanted to make a plot of the pressure as a function of temperature. In order to make the system
+equilibrate at some predefined values, the Berendsen thermostat was used (se section \ref{sec:thermostats}). Eighteen simulations were run, each lasting a total of 4.0 ps and with
+400 timesteps. The thermostat was active the first 200 timesteps. Average values for pressure and temperature were calculated for the last 100 timesteps. The result is shown in figure \ref{fig:pressVsTemp}.
+We see that there is a phase transition just above $T=300$ K. Thus our system does not behave as an ideal gas. This is not surprising since our model takes interatomic interactions into account. 
+
+\begin{figure}[!ht]
+ \begin{center}
+ \label{fig:pressVsTemp}
+  \includegraphics[scale=0.40]{../Results/oppgL/pressVsTemp.eps}
+  \caption{Plot of the pressure as a function temperature.}
+ \end{center}
+\end{figure}
+
+
+
+
+\subsection{Diffusion}
+
+The transport of atoms through a fluid can be characterized by the diffusion constant. It can be calculated by measuring the the mean square distance travelled by all the atoms:
+\bdi
+\langle r^2(t)\rangle = \frac{1}{N}\sum_{i=1}^N(\vec r(t) - \vec r_{\mathrm{initial}})^2.
+\edi
+For large $t$ we know that $\langle r^2(t)\rangle$ and $D$ are related through
+\bdi
+\langle r^2(t)\rangle = 6Dt.
+\edi
+This means that if we plot $D(t)$ we should expect to get an approximately linear graph, and the slope of this graph is six times the diffusion constant. Figure \ref{fig:diffusion}
+shows $\langle r^2(t)\rangle$ for temperatures 500 K and 740 K. The temperatures given are the temperatures at which the system eqilibrated after a very short period of time (compared
+to the total simulation time). The graphs appear quite linear. By just using the endpoints of the graph, the diffusion constant is estimated to be $D=5.7\cdot10^{-9}$ m$^2$/s
+and $D=10.3\cdot10^{-9}$ m$^2$/s for temperatures $T=500$ K and
+$T = 740$ K, respectively.
+
+\begin{figure}[!ht]
+ \begin{center}
+ \label{fig:diffusion}
+  \includegraphics[scale=0.40]{../Results/diffusion.eps}
+  \caption{Plots of the mean square distance travelled by the atoms.}
+ \end{center}
+\end{figure}
+
+
+\subsection{Thermostats}
+\label{sec:thermostats}
+As we saw in figure \ref{fig:temp}, the equilibrium temperature is (seldom) equal to the initial temperature. It is therefore not obvious how to obtain a desired temperature.
+One can, of course, make several trials until the system settles at the desired temperature, but this is cumbersome. A better way is to implement a thermostat. After each time step the thermostat
+compares the system's actual temperature with a predefined target temperature. If they do not match, the thermostat corrects the speed of the atoms. In this project I implemented the Berendsen thermostat and the Andersen thermostat.
+
+The Berendsen thermostat scales the velocities of every atom with a facter $\gamma$, which is given by
+\bdi
+\gamma = \sqrt{1 + \frac{\Delta t}{\tau}\Big(\frac{T_{\mathrm{bath}}}{T} - 1\Big)},
+\edi
+where $\Delta t$ is the time step and $\tau$ is the relaxation time. The relaxation time essentially determines how fast the thermostat pushes the system towards equilibrium.
+
+The Andersen thermostat models the collisions between the atoms in the system and the atoms in the surrounding heat bath. For every time step each atom might collide with
+an atom in the heat bath and get a new velocity with standard deviation $\sqrt{k_\mathrm{B}T_\mathrm{bath}/m}$. This velocity corresponds to the target temperature.
+The collision will occur if a random uniformly distributed number in the interval $[0,\,1]$ is less than $\Delta t/\tau$, where $\tau$ can be regarded as a collision time.
+It plays the same role as $\tau$ in the Berendsen thermostat.
+
+Figure \ref{fig:tempThermostats} shows plots of the temperature when the two thermostats are implemented. In both cases the initial and target temperatures were set equal to 300K and
+the parameter $\tau = 20 \Delta t$. The convergence rate is more or less the same for both methods, but we see that the fluctuations are more pronounced when using
+the Andersen thermostat.
+
+It is interesting to observe how the atoms behave visually in Ovito when the thermostats are applied. When using the Berendsen thermostat, the atoms seem to behave almost as if there were no
+thermostat. The Andersen thermostat, however, gives a radically different behaviour; the velocity of the atoms often changes direction abruptly. This is not surprising, since the Andersen
+thermostat is supposed to model collisions with the surrounding heat bath.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Berendsen thermostat]{
+            \label{fig:tempBerendsen300K}
+            \includegraphics[width=0.45\textwidth]{../Results/oppgP/tempBerendsen300K.eps}
+        }\hspace{5mm}
+        \subfigure[Andersen thermostat]{
+           \label{fig:tempAndersen300K}
+           \includegraphics[width=0.45\textwidth]{../Results/oppgQ/tempAndersen300K.eps}
+        }\\ 
+    \end{center}
+    \caption{Temperature as a function of time when the Berendsen (a) and Andersen (b) thermostats are activated. In both cases the initial and target temperature were set equal to 300K.}
+    \label{fig:tempThermostats}
+\end{figure}
+
+
+%\newpage
+%\begin{thebibliography}{10}
+%\bibitem{Marouchkine}Andrei Moraouchkine. Room-Temperature Superconductivity, Cambridge International Science Publishing.
+%\bibitem{supra}http://www.supraconductivite.fr/en/index.php?p=supra-levitation-phase-more
+%\bibitem{uio}http://www.mn.uio.no/fysikk/english/research/groups/amks/superconductivity/mo/
+%\bibitem{Mikheenko}P. N. Mikheenko, Yu. E. Kuzovlev. Inductance measurements of HTSC films with high critical currents, Physica C 204 (1993) 229-236.
+%\bibitem{morten}Morten Hjorth-Jensen. Computational Physics. Lecture Notes Fall 2011. University of Oslo, 2011.
+%\bibitem{fys}Young \& Friedman. University Physics, 11th edition, 2004.
+%\bibitem{stat}G.L. Squires. Practical Physics, 4th edition, 2001.
+%\bibitem{dimensjon}http://en.wikipedia.org/wiki/Buckingham
+%\bibitem{density}Wikipedia, http://en.wikipedia.org/wiki/Density\_of\_air
+%\bibitem{viscosity}http://en.wikipedia.org/wiki/Viscosity
+%\bibitem{diffus}Wikipedia, http://en.wikipedia.org/wiki/Thermal\_diffusivity
+
+%\end{thebibliography}
+
+\end{document}

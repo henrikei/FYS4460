@@ -1,0 +1,245 @@
+\documentclass[12pt]{article}
+\usepackage[norsk]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx, subfigure}
+\usepackage{bm}
+\usepackage[margin=1.25in]{geometry}
+%\usepackage{subfig}
+
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqa}{\begin{eqnarray}}
+\newcommand{\eeqa}{\end{eqnarray}}
+\newcommand{\ben}{\begin{enumerate}}
+\newcommand{\een}{\end{enumerate}}
+\newcommand{\bit}{\begin{itemize}}
+\newcommand{\eit}{\end{itemize}}
+\newcommand{\bce}{\begin{center}}
+\newcommand{\ece}{\end{center}}
+\newcommand{\bo}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\bdi}{\begin{displaymath}}
+\newcommand{\edi}{\end{displaymath}}
+\newcommand{\ud}{\mathrm{d}}
+
+\parindent 0pt
+\parskip 10pt
+
+\topmargin -0.3cm
+
+
+%\renewcommand{\baselinestretch}{1.787} dobbel
+\renewcommand{\baselinestretch}{1.0}
+
+\thispagestyle{plain}
+
+\begin{document}
+
+\title{FYS4460 - Project2: Advanced Molecular Dynamics Modeling}
+\author{Henrik Eiding}
+\date{\today}
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\section{Introduction}
+
+In the previous project a molecular dynamics simulator was developed. In this project the model has been used to study diffusion and flow of Argon atoms through
+nano-porous materials.
+
+\section{Preparation of nano-porous materials}
+First a liquid Argon system consisting of $N_x \times N_y \times N_z = 20^3 = 8000$ unit cells (32 000 atoms) of size $b = 5.72$ Å were thermalized at temperature $T = 0.851\,T_0$. Thereafter two different types of
+nano-porous materials were created:
+\begin{enumerate}
+ \item One single cylindrical pore of radius $R = 20$ Å parallell with the z-axis was cut out from the center of the bulk material. The particles inside the cylinder were
+       considered to be free and the particles outside to be the matrix (i.e. non-moving). Figure \ref{fig:screenshot1} shows a screenshot of the system.
+ \item A matrix consisting of 20 balls at random positions and with random radii uniformly distributed between 20 Å and 30 Å. The balls were allowed to overlap, and the matrix was modeled as the union of all
+       the balls. Figure \ref{fig:screenshot2} shows a screenshot of the system.
+\end{enumerate}
+
+In both cases the density of the fluid was reduced by 50\% after the matrix was created. This was done by running through all the free particles and giving each of them a 50\% probability of being removed.
+
+The porosity is defined as $\phi = V_p/V$, where $V_p$ is the volume of the pores and $V$ is the total volume (matrix plus pores). The porosity of the cylindrical system is easy to calculate:
+\bdi
+\phi_{cyl} = \frac{\pi r_{cyl}^2}{(Nb)^2} = \frac{\pi\cdot20^2}{(20\cdot5.72)^2} = 0.096.
+\edi
+For the second system there is no way to calculate the porosity analytically a priori (because the positions and radii of the balls are random). But the porosity can in general be calculated numerically as
+$\phi = n_{free}/n$, where $n_{free}$ is the number of free particles and $n$ is the total number of particles. However, this must be calculated before any reduction of fluid density.
+ For the second nano-porous system this gives $\phi_{balls} = 0.443$.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Slice through single cylindrical pore.]{
+            \label{fig:screenshot1}
+            \includegraphics[width=0.45\textwidth]{../Results/OppgD/cylindricalPore.eps}
+        }\hspace{5mm}
+        \subfigure[Slice through porous system consisting of the union of randomly placed circular balls.]{
+           \label{fig:screenshot2}
+           \includegraphics[width=0.45\textwidth]{../Results/OppgD/circularPores.eps}
+        }\\ 
+    \end{center}
+    \caption{Screenshots of two porous systems taken from Ovito. The green particles are frozen and the red particles are free.}
+    \label{fig:screenshots}
+\end{figure}
+
+The distinction between free and non-fre particles was taken into account by appending an extra column, a ``free''-column, to the .xyz-files (state files). This column consists of integer values
+0 or 1, where zero means non-free and 1 means free. In the program itself, only the positions and velocities of free particles are updated. Forces between free and non-free particles are still calculated,
+but forces between non-free particles are not.
+
+
+
+\section{Analysis of nano-porous media}
+
+\subsection{Temperature and diffusion in a nano-porous material}
+The temperature $T(t)$ and diffusion $\langle r^2(t)\rangle$ was measured for porous system 2. The system was run over a total of 800 time steps of
+length $\Delta t = 0.012\,t_0 = 0.025$ ps. It was thermalized at temperature $T=1.5\,T_0 = 179.6$ K with the Berendsen thermostat turned on during the first 400 time steps. The relaxation time of the thermostat
+was set to $\tau = 10\Delta t$. The results of the simulation are shown in figure \ref{fig:nanoballs}. The results do not seem to differ from the results we got in project 1 for an entirely free liquid.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Temperature.]{
+            \label{fig:temperature}
+            \includegraphics[width=0.45\textwidth]{../Results/OppgGandH/temperature.eps}
+        }\hspace{5mm}
+        \subfigure[Diffusion $\langle r^2(t)\rangle$.]{
+           \label{fig:diffusion}
+           \includegraphics[width=0.45\textwidth]{../Results/OppgGandH/diffusion.eps}
+        }\\ 
+    \end{center}
+    \caption{Measurement of temperature and diffusion of a liquid in porous system 2.}
+    \label{fig:nanoballs}
+\end{figure}
+
+
+\subsection{Flow in a nano-porous material}
+This subsection describes how porous system 1 was used to measure the fluid viscosity $\mu$ and how this viscosity was further used to measure the permeability $k$ of the porous system 2.
+
+\subsubsection{The fluid viscosity}
+Consider a fluid flowing through a cylindrical pore with outer radius $a$ directed along the $z$-axis.
+As we will show in the following, the continuum model predicts that the speed of a fluid element will vary with the radial distance from the center of the pore.
+This means that a cubic fluid element $r\,d\varphi\, dr\, dz$ will have different velocities on the surfaces $r$ and $r+dr$, which in turn means that the element will deform. This deformation is the cause of shear
+stresses acting on the two beforementioned surfaces. These stresses, $\sigma_{rz}$, are often assumed to be given by the equation
+\bdi
+\sigma_{rz} = \mu\frac{\partial u}{\partial r},
+\edi
+where $\mu$ is the viscosity and $u$ is the velocity of the fluid.
+The first subindex indicates that the stresses are acting on the surface perpendicular to the $r$-axis, and the second index indicates that the
+stresses are acting in the $z$-direction.
+
+Assume that the only external force acting on the fluid element $r\,d\varphi\, dr\, dz$ is the volume force $F_z$. In a stationary state this force must be equal to the sum of the shear stresses on the two surfaces $r$ and $r+dr$:
+\bdi
+\mu\frac{\partial u}{\partial r}\Big|_{r+dr}(r+dr)\,d\varphi\,dz - \mu\frac{\partial u}{\partial r}\Big|_r r\,d\varphi\,dz = F_zr\,d\varphi\, dr\, dz.
+\edi
+This can be rewritten as
+\begin{eqnarray*}
+ \mu\frac{\partial}{\partial r}\Big(r\frac{\partial u}{\partial r}\Big)\,dr\,d\varphi\,dz & = & F_zr\,d\varphi\,dr\,dz \\
+ \mu\frac{\partial}{\partial r}\Big(r\frac{\partial u}{\partial r}\Big) & = & r\,F_z.
+\end{eqnarray*}
+This equation is easily solved by integration and has the general solution
+\bdi
+u(r) = \frac{F_z}{4\mu}r^2 + A\ln r + B.
+\edi
+The constant $A$ must be equal to zero in order to avoid infinite speeds at $r = 0$. By introducing the boundary condition $u(a) = 0$ we obtain the solution
+\bdi
+u(r) = \frac{F_z}{4\mu}(a^2 - r^2).
+\edi
+
+This solution was used to estimate the viscosity of the fluid by the following procedure:
+\begin{enumerate}
+ \item All particles were subject to the force $\hat F_z = 0.1\epsilon/\sigma$. This is equivalent to a volume force $F_z = n \hat F_z$, where $n$ is the number density.
+ \item A simulation was run for a total of 10 000 time steps of length $\Delta t = 0.012\,t_0 = 0.025$ ps. The fluid was pre-thermalized at a temperature $T = 0.851\,T_0 = 101.9$ K.
+ \item For the last 1000 time steps the number density and the $z$-component of the velocity of the free atoms were measured and averaged. Both are plotted in figure \ref{fig:numberAndVelocity}. The radial resolution has been set to 25 bins.
+ \item The viscosity was estimated as
+ \begin{equation}
+  \label{eq:mu}
+ \mu = \frac{n^{exp}(r)\hat F_z (a^2 - r^2)}{4 u^{exp}(r)},
+ \end{equation}
+ where $n^{exp}(r)$ and $u^{exp}(r)$ are the measured number density and velocity. A plot of $\mu$ is shown in figure \ref{fig:mu}.
+\end{enumerate}
+
+We see that the number density is more or less constant throuhout the cross section except close to the boundary, where it is slightly higher. The figure also shows that the density
+is non-zero also for $r>a$, which means that some of the free particles are actually moving into the matrix.
+
+According to the continuum model the velocity $u(r)$ should be parabolic. Our measurements did not quite match this, but considering the fact that we only ran the simulation over 10 000 time steps and averaged
+the velocity over the last 1000 of them, this is probably not too bad. Also, the continuum model is only a model and should not be taken to reflect reality perfectly.
+
+Figure \ref{fig:mu} shows that the measured viscosity is not perfectly constant throughout the fluid as it should be. However, it seems to fluctuate around the value $\mu\approx 0.001$ eV$\cdot$ps/Å$^3$.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Number density $n^{exp}(r)$.]{
+            \label{fig:number}
+            \includegraphics[width=0.46\textwidth]{../Results/OppgJ/0to10000/numberDensityLast1000Steps.eps}
+        }\hspace{5mm}
+        \subfigure[Velocity distribution $u^{exp}(r)$.]{
+           \label{fig:velocity}
+           \includegraphics[width=0.46\textwidth]{../Results/OppgJ/0to10000/velocityLast1000Steps.eps}
+        }\\ 
+    \end{center}
+    \caption{Measurement of the number density and velocity distribution through a nano-porous cylinder of radius 20 Å.}
+    \label{fig:numberAndVelocity}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.50\textwidth]{../Results/OppgJ/0to10000/viscosityLast1000Steps.eps}
+	\caption{Plot of equation (\ref{eq:mu}).}
+	\label{fig:mu}
+    \end{center}
+\end{figure}
+
+
+
+\subsubsection{Permeability}
+Darcy's law describes the flow of a fluid through a porous medium. It is given by
+\bdi
+\vec U = \frac{k}{\mu}(\nabla P + \rho_m\vec g).
+\edi
+$\vec U$ is the volume flux, $P$ is the pressure, $\rho_m$ is the mass density and $\vec g$ is the gravitational acceleration. A simulation for porous system 2 was run as described in step 1 and 2
+of the previous subsection (except that the force was applied in the $y$-direction). This means that $P=0$ in Darcy's law, and we do not have the gravitational force, but the volume force $n\hat F_y = 0.1n\epsilon/\sigma$.
+Because the gravitational force is also a volume force, we may replace the term $\rho_m \vec g$ by $n\hat F_y$ in Darcy's law. We then get
+\bdi
+U_y = \frac{k}{\mu}n\hat F_y.
+\edi
+The permeability of the system can then be calculated as
+\bdi
+k = \frac{\mu\,U_y}{n\hat F_y}.
+\edi
+
+In order to estimate $k$ we need to extract $U_y$ from our simulations. This was done by measuring how many atoms moved through the plane $y = L/2$, where $L$ is the length of the box, during the last 200
+time steps of the simulation. It turned out to be 150 atoms. Keeping in mind that the original density of the fluid was halved, this means that the total volume flowing through the plane was:
+\bdi
+Q = 150\cdot\frac{b^3}{\frac{1}{2}\cdot4} = 150\cdot\frac{(5.72\mathrm{A})^3}{2} = 1436\,\mathrm{A}^3.
+\edi
+Thus the flux $U_y$ is
+\bdi
+U_y = \frac{Q}{At} = \frac{Q}{(bN)^2\cdot200\Delta t} = \frac{1436\,\mathrm{A}^3}{(5.72\cdot20\,\mathrm{A})^2\cdot200\cdot0.025\,\mathrm{ps}} \approx 0.02\,\mathrm{A/ps}.
+\edi
+
+Assuming homogeneous density $n = 2/b^3 = 0.01$ Å$^{-3}$ of the fluid, this results in the permeability
+\begin{eqnarray*}
+k & = & \frac{\mu\,U_y}{n\hat F_y} = \frac{0.001\cdot0.02}{0.01\cdot 0.1}\,\mathrm{A}^2 \\
+k & = & 0.02\,\mathrm{A}^2.
+\end{eqnarray*}
+
+Had we instead applied the external volume force in a different direction, we would have measured a different permeability. For example, there is almost no connection between the boundary surfaces normal to the
+$z$-axis, so a measurement in this direction would give a very small permeability. This means that there is no way to predict the permeability of a system if you know the porosity. But statistically there could
+be some connection between the two. In order to investigate this relation, we would have to do a large set of calculations of the type described here. This is quite time consuming and has not been persued here.
+%\newpage
+%\begin{thebibliography}{10}
+%\bibitem{Marouchkine}Andrei Moraouchkine. Room-Temperature Superconductivity, Cambridge International Science Publishing.
+%\bibitem{supra}http://www.supraconductivite.fr/en/index.php?p=supra-levitation-phase-more
+%\bibitem{uio}http://www.mn.uio.no/fysikk/english/research/groups/amks/superconductivity/mo/
+%\bibitem{Mikheenko}P. N. Mikheenko, Yu. E. Kuzovlev. Inductance measurements of HTSC films with high critical currents, Physica C 204 (1993) 229-236.
+%\bibitem{morten}Morten Hjorth-Jensen. Computational Physics. Lecture Notes Fall 2011. University of Oslo, 2011.
+%\bibitem{fys}Young \& Friedman. University Physics, 11th edition, 2004.
+%\bibitem{stat}G.L. Squires. Practical Physics, 4th edition, 2001.
+%\bibitem{dimensjon}http://en.wikipedia.org/wiki/Buckingham
+%\bibitem{density}Wikipedia, http://en.wikipedia.org/wiki/Density\_of\_air
+%\bibitem{viscosity}http://en.wikipedia.org/wiki/Viscosity
+%\bibitem{diffus}Wikipedia, http://en.wikipedia.org/wiki/Thermal\_diffusivity
+
+%\end{thebibliography}
+
+\end{document}

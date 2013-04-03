@@ -16,14 +16,14 @@ public:
     vector<Atom*>& getAtoms();
     vector<Cell*>& getNeighbours();
     void setDistanceCorrection(const double &, const int &, const int &);
-    vec3 getDistanceCorrection(const int &);
+    const vec3 &getDistanceCorrection(const int &);
     void deleteAtoms();
     vector<Cell*> neighbours;
 private:
     ivec3 positionIndices;
     double sideLength;
     vector<Atom*> atoms;
-    mat distanceCorrection;
+    vector<vec3> distanceCorrection;
 };
 
 #endif // CELL_H

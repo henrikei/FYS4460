@@ -15,20 +15,20 @@ int main()
 {
     // Input in SI units
     string atomType = "Ar";
-    int nAtomsPerDim = 12;
+    int nAtomsPerDim = 20;
     double mass = 39.948*1.66E-27;
     double fccLength = 5.720E-10;
     double temperature = 0.851*119.74;
-    double endTime = 2.5E-11;
+    double endTime = 2.5E-10;
     double ThermoTurnOffTime = 1.0E-11;
     double timeStep = 2.5E-14;// 4.862E-14;
-    string thermostat = "berendsenThermostat";
+    string thermostat = "none";
     double relaxationTime = 10; // In units of timeSteps
-    //vec3 externalForce;
-    //externalForce << 0 << 0 << 0.1*1.6531E-21/3.405E-10;
+    vec3 externalForce;
+    externalForce << 0 << 0.1*1.6531E-21/3.405E-10 << 0;
 
     System test("Ar", nAtomsPerDim, mass, fccLength, temperature, endTime, timeStep);
-    //test.addExternalForce(externalForce);
+    test.addExternalForce(externalForce);
 
     if (thermostat == "berendsenThermostat"){
         BerendsenThermostat *thermos = new BerendsenThermostat(& test);
@@ -47,7 +47,7 @@ int main()
     }
 
     test.generate();
-    //test.readState("circularPores0.xyz");
+    test.readState("circularPoresHalfDensity.xyz");
     test.integrate();
     return 0;
 }

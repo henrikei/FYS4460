@@ -8,11 +8,19 @@ using namespace std;
 
 int main()
 {
+    vec2 center;
+    center << 6*5.72/3.405 << 6*5.72/3.405;
+    double radius = 14/3.405;
+    CylindricalPore pore;
+    pore.readFile("state1000_12x12x12.xyz");
+    pore.make(center, radius);
+    pore.writeFile("cylindricalPoreR14.xyz");
+
     ReduceDensity red;
     double reductionRatio = 0.5;
-    red.readFile("cylindricalPore0.xyz");
+    red.readFile("cylindricalPoreR14.xyz");
     red.make(reductionRatio);
-    red.writeFile("cylindricalPoreHalfDensity.xyz");
+    red.writeFile("cylindricalPoreR14HalfDensity.xyz");
 
 //    double rMin = 20/3.405;
 //    double rMax = 30/3.405;

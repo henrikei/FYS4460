@@ -45,31 +45,31 @@ void Atom::setFree(int &f){
     free = f;
 }
 
-vec3& Atom::getPosition(){
+const vec3& Atom::getPosition(){
     return position;
 }
 
-vec3& Atom::getVelocity(){
+const vec3& Atom::getVelocity(){
     return velocity;
 }
 
-vec3& Atom::getDisplacement(){
+const vec3& Atom::getDisplacement(){
     return displacement;
 }
 
-vec3& Atom::getForce(){
+const vec3& Atom::getForce(){
     return force;
 }
 
-int Atom::getFree(){
+const int& Atom::getFree(){
     return free;
 }
 
-double& Atom::getMass(){
+const double& Atom::getMass(){
     return mass;
 }
 
-string& Atom::getName()
+const string& Atom::getName()
 {
     return name;
 }

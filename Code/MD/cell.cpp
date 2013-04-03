@@ -4,7 +4,9 @@ Cell::Cell(const ivec3 &posInd, const double &sideL)
 {
     positionIndices = posInd;
     sideLength = sideL;
-    distanceCorrection = zeros<mat>(3,26);
+    for (int i = 0; i < 26; i++){
+        distanceCorrection.push_back(zeros(3));
+    }
 }
 
 void Cell::addAtom(Atom *a){
@@ -28,11 +30,11 @@ vector<Cell*>& Cell::getNeighbours(){
 }
 
 void Cell::setDistanceCorrection(const double &value, const int &i, const int &j){
-    distanceCorrection(i,j) = value;
+    distanceCorrection.at(j)(i) = value;
 }
 
-vec3 Cell::getDistanceCorrection(const int &n){
-    return distanceCorrection.col(n);
+const vec3& Cell::getDistanceCorrection(const int &n){
+    return distanceCorrection.at(n);
 }
 
 void Cell::deleteAtoms(){

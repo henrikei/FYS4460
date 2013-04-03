@@ -106,6 +106,7 @@ void System::generate(){
             }
         }
     }
+    // locate neighbourcells
     for (int i = 0; i < nCells; i++){
         for (int j = 0; j < 26; j++){
             ivec3 neighbourPointer = cells.at(i)->getPositionIndices() + directionVecs.col(j);
@@ -358,7 +359,7 @@ double System::getMeanSquareDisplacement(){
     double meanSquareDisplacement = 0;
     for (int i = 0; i < nAtoms; i++){
         if (atoms.at(i)->getFree()){
-            vec3& displacement = atoms.at(i)->getDisplacement();
+            vec3 displacement = atoms.at(i)->getDisplacement();
             meanSquareDisplacement += displacement(0)*displacement(0) + displacement(1)*displacement(1) + displacement(2)*displacement(2);
         }
     }

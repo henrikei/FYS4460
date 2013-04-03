@@ -19,13 +19,13 @@ public:
     void setForce(vec3 &);
     void addForce(vec3 &);
     void setFree(int &);
-    vec3& getPosition();
-    vec3& getVelocity();
-    vec3& getDisplacement();
-    vec3& getForce();
-    int getFree();
-    double& getMass();
-    string& getName();
+    const vec3 &getPosition();
+    const vec3 &getVelocity();
+    const vec3 &getDisplacement();
+    const vec3 &getForce();
+    const int &getFree();
+    const double &getMass();
+    const string &getName();
 private:
     string name;
     double mass;
