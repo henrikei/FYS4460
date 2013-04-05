@@ -163,7 +163,7 @@ is non-zero also for $r>a$, which means that some of the free particles are actu
 According to the continuum model the velocity $u(r)$ should be parabolic. Our measurements did not quite match this, but considering the fact that we only ran the simulation over 10 000 time steps and averaged
 the velocity over the last 1000 of them, this is probably not too bad. Also, the continuum model is only a model and should not be taken to reflect reality perfectly.
 
-Figure \ref{fig:mu} shows that the measured viscosity is not perfectly constant throughout the fluid as it should be. However, it seems to fluctuate around the value $\mu\approx 0.001$ eV$\cdot$ps/Å$^3$.
+Figure \ref{fig:mu} shows that the measured viscosity is not perfectly constant throughout the fluid as it should be. However, it seems to fluctuate around the value $\mu\approx 1.4\cdot10^{-5}$ kg$\cdot$m/s.
 
 \begin{figure}[!ht]
     \begin{center}
@@ -197,7 +197,7 @@ Darcy's law describes the flow of a fluid through a porous medium. It is given b
 \vec U = \frac{k}{\mu}(\nabla P + \rho_m\vec g).
 \edi
 $\vec U$ is the volume flux, $P$ is the pressure, $\rho_m$ is the mass density and $\vec g$ is the gravitational acceleration. A simulation for porous system 2 was run as described in step 1 and 2
-of the previous subsection (except that the force was applied in the $y$-direction). This means that $P=0$ in Darcy's law, and we do not have the gravitational force, but the volume force $n\hat F_y = 0.1n\epsilon/\sigma$.
+of the previous subsection (except that the force was applied in the $y$-direction). In our specific case $P=0$, and we have no gravitational force, but the volume force $n\hat F_y = 0.1n\epsilon/\sigma$.
 Because the gravitational force is also a volume force, we may replace the term $\rho_m \vec g$ by $n\hat F_y$ in Darcy's law. We then get
 \bdi
 U_y = \frac{k}{\mu}n\hat F_y.
@@ -210,22 +210,22 @@ k = \frac{\mu\,U_y}{n\hat F_y}.
 In order to estimate $k$ we need to extract $U_y$ from our simulations. This was done by measuring how many atoms moved through the plane $y = L/2$, where $L$ is the length of the box, during the last 200
 time steps of the simulation. It turned out to be 150 atoms. Keeping in mind that the original density of the fluid was halved, this means that the total volume flowing through the plane was:
 \bdi
-Q = 150\cdot\frac{b^3}{\frac{1}{2}\cdot4} = 150\cdot\frac{(5.72\mathrm{A})^3}{2} = 1436\,\mathrm{A}^3.
+Q = 150\cdot\frac{b^3}{\frac{1}{2}\cdot4} = 150\cdot\frac{(5.72\cdot 10^{-10}\,\mathrm{m})^3}{2} = 1.436\cdot10^{-27}\,\mathrm{m}^3.
 \edi
 Thus the flux $U_y$ is
 \bdi
-U_y = \frac{Q}{At} = \frac{Q}{(bN)^2\cdot200\Delta t} = \frac{1436\,\mathrm{A}^3}{(5.72\cdot20\,\mathrm{A})^2\cdot200\cdot0.025\,\mathrm{ps}} \approx 0.02\,\mathrm{A/ps}.
+U_y = \frac{Q}{At} = \frac{Q}{(bN)^2\cdot200\Delta t} = \frac{1.436\cdot10^{-27}\,\mathrm{m}^3}{(5.72\cdot10^{-10}\,\mathrm{m}\cdot20)^2\cdot200\cdot0.025\cdot10^{-12}\,\mathrm{s}} \approx 2.2\,\mathrm{m/s}.
 \edi
 
-Assuming homogeneous density $n = 2/b^3 = 0.01$ Å$^{-3}$ of the fluid, this results in the permeability
+Assuming homogeneous density $n = 2/b^3 = 1.1\cdot10^{28}$ m$^{-3}$ of the fluid, this results in the permeability
 \begin{eqnarray*}
-k & = & \frac{\mu\,U_y}{n\hat F_y} = \frac{0.001\cdot0.02}{0.01\cdot 0.1}\,\mathrm{A}^2 \\
-k & = & 0.02\,\mathrm{A}^2.
+k & = & \frac{\mu\,U_y}{n\hat F_y} = \frac{1.4\cdot10^{-5}\cdot2.2}{1.1\cdot10^{28}\cdot0.1\cdot0.30303\cdot1.60\cdot10^{-19}\cdot10^{10}} \\
+k & = & 5.8\cdot10^{-23}\,\mathrm{m}^4.
 \end{eqnarray*}
 
 Had we instead applied the external volume force in a different direction, we would have measured a different permeability. For example, there is almost no connection between the boundary surfaces normal to the
-$z$-axis, so a measurement in this direction would give a very small permeability. This means that there is no way to predict the permeability of a system if you know the porosity. But statistically there could
-be some connection between the two. In order to investigate this relation, we would have to do a large set of calculations of the type described here. This is quite time consuming and has not been persued here.
+$z$-axis, so a measurement in this direction would give a very small permeability. This means that there is no way to predict the permeability of a system from the porosity. But statistically there could
+be some connection between the two. In order to investigate this relation, we would have to do a large set of calculations of the type described here. This is quite time consuming and has not been pursued here.
 %\newpage
 %\begin{thebibliography}{10}
 %\bibitem{Marouchkine}Andrei Moraouchkine. Room-Temperature Superconductivity, Cambridge International Science Publishing.
