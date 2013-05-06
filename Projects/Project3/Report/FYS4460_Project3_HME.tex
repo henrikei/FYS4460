@@ -1,0 +1,570 @@
+\documentclass[12pt]{article}
+\usepackage[norsk]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx, subfigure}
+\usepackage{bm}
+\usepackage[margin=1.25in]{geometry}
+%\usepackage{subfig}
+
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqa}{\begin{eqnarray}}
+\newcommand{\eeqa}{\end{eqnarray}}
+\newcommand{\ben}{\begin{enumerate}}
+\newcommand{\een}{\end{enumerate}}
+\newcommand{\bit}{\begin{itemize}}
+\newcommand{\eit}{\end{itemize}}
+\newcommand{\bce}{\begin{center}}
+\newcommand{\ece}{\end{center}}
+\newcommand{\bo}[1]{\mbox{\boldmath $#1$}}
+\newcommand{\bdi}{\begin{displaymath}}
+\newcommand{\edi}{\end{displaymath}}
+\newcommand{\ud}{\mathrm{d}}
+
+\parindent 0pt
+\parskip 10pt
+
+\topmargin -0.3cm
+
+
+%\renewcommand{\baselinestretch}{1.787} dobbel
+\renewcommand{\baselinestretch}{1.0}
+
+\thispagestyle{plain}
+
+\begin{document}
+
+\title{FYS4460 - Project3: Percolation}
+\author{Henrik Eiding}
+\date{\today}
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+
+\section*{Theoretical summary}
+
+In this report we make use of the following notation:
+\begin{itemize}
+ \item $p$: Probability for a given site to be set.
+ \item $p_c$: The value of $p$ for which we get a percolating cluster in a system of infinite size.
+ \item $p_{\Pi=x}$: Defined such that $\Pi(p_{\Pi=x})=x$. See the definition of $\Pi$ below.
+ \item $L$: System size.
+ \item $d$: Number of spatial dimensions.
+ \item $s$: Mass of a cluster (i.e. the number of sites belonging to the cluster).
+ \item $M(p,L)$: Mass of the percolating cluster.
+ \item $P(p,l)$: Density of the percolating cluster, $P(p,L) = M(p,L)/L^d$.
+ \item $\Pi(p,L)$: Probability for percolation.
+ \item $sn(s,p)$: Probability for a randomly chosen site to belong to a cluster of mass s.
+ \item $N_s$: Number of clusters of mass $s$.
+ \item $n(s,p)$: Cluster number density.
+ \item $s_\xi$: Characteristic cluster mass.
+ \item $R_s$: Radius of gyration of a cluster of mass s. Measures the size of a system of mass $s$.
+ \item $\xi$: Characteristic cluster size (measured in length, i.e. radius of gyration).
+ \item $\sigma(\xi,L)$: Conductivity.
+ \item $G(\xi,L)$: Conductance.
+\end{itemize}
+
+
+\subsection*{Cluster number density, $n(s,p)$, and characteristic cluster mass, $s_\xi$}
+$sn(s,p)$ is the probability for a randomly chosen site to belong to a cluster of mass $s$. This means that
+\bdi
+sn(s,p) = \frac{sN_s}{L^d},
+\edi
+or
+\bdi
+n(s,p) = \frac{N_s}{L^d}.
+\edi
+So we see that $n(s,p)$ is the number of clusters of mass $s$ divided by the total number of sites. The last equation reflects how we actually measure $n(s,p)$ in our calculations.
+
+For a given value of $p$ we expect to find clusters of different masses. But we also expect there to be a characteristic cluster mass $s_\xi$ above which there is an exponentially decreasing
+probability to find any clusters. For values of $s$ below $s_\xi$ we expect $n(s,p)$ to follow a power law. We can combine these two assumptions into the following ansatz
+\bdi
+n(s,p) = s^{-\tau}F(s/s_\xi),
+\edi
+where $\tau$ is an exponent which depends on the dimension of the system, and $F(u)$ is a cut-off function
+\bdi
+F(u) \approx \left\{\begin{tabular}{c c c} 1 & if & $u \leq$ 1 \\
+                                           0 & if & $u > 1 $
+                    \end{tabular}\right.
+\edi
+
+
+The characteristic cluster mass $s_\xi$ can loosely be thought of as the largest cluster in the system. When $p$ approaches $p_c$ we expect the largest cluster to become the spanning cluster.
+Thus $s_\xi$ should diverge as $p$ approaches $p_c$. We therefore make the following ansatz for the cluster mass
+\beq
+\label{eq:s_xi}
+s_\xi = s_{\xi,0}|p-p_c|^{-1/\sigma}.
+\eeq
+For $p>p_c$ we will interpret $s_\xi$ to mean the mass of the largest cluster excluding the percolating one(s). (Typically the percolating cluser(s) will have several holes of smaller clusters).
+
+
+\subsection*{Radius of gyration, $R_s$}
+Consider a cluster $i$ of mass $s_i$ and with center of mass $\vec R_i$. We define the radius of gyration $R_i$ of this specific cluster as
+\bdi
+R_i^2 = \frac{\sum_{n = 1}^{s_i}(\vec r_n - \vec R_i)^2}{s_i}.
+\edi
+For a given system there will usually be several clusters of equal mass. We then define the radius of gyration of a cluster of mass $s$ to be the radius averaged over
+all clusters with this particular mass:
+\bdi
+R_s = \langle R_{s_i} \rangle_i.
+\edi
+We will use this quantity as the measure of the size of a system (and not the mass).
+
+We expect there to be a close relation between the mass and the size of a cluster:
+\bdi
+s_\xi \propto \xi^D.
+\edi
+
+
+\subsection*{Characteristic cluster size, $\xi$}
+Just as we expect there to be a characteristic cluster mass, there should be a corresponding characteristic cluster size $\xi$. The characteristic cluster size
+will also diverge as $p$ approaches $p_c$. This is reflected in the ansatz
+\beq
+\label{eq:xi}
+\xi = \xi_0|p-p_c|^{-\nu}.
+\eeq
+
+
+\subsection*{Mass of the spanning cluster, $M(p,L)$}
+Consider a percolating system of size $L$. Then we know that the spanning cluster is of size $\xi \approx L$. This means that the mass of the percolating cluster is related to the
+system size through
+\beq
+\label{eq:mass_perc}
+M(p,L) \propto L^D.
+\eeq
+
+
+
+\subsection*{Probability for percolation, $\Pi(p,L)$}
+For a system of infinite size we know that $\Pi(p,\infty) = \theta(p-p_c)$. For finite size systems, however, this is not true; the corners of the step function smoothes out as
+we decrease system size.
+
+For finite systems we will assume that  $\Pi(p,L)$ only depends on the ratio between the system size $L$ and the characteristic cluster size $\xi$:
+\bdi
+\Pi(p,L) = f(\frac{L}{\xi}) = f(\frac{L}{\xi_0}(p-p_c)^\nu) = f([\Big(\frac{L}{\xi_0}\Big)^{1/\nu}(p-p_c)]^\nu) = g(L^{1/\nu}(p-p_c)).
+\edi
+Since $g(u)$ is a monotonic function, we can write
+\bdi
+p = p_c + L^{-1/\nu}g^{-1}(\Pi(p,L)),
+\edi
+or
+\beq
+\label{eq:p_x}
+p_x = p_c + C_xL^{-1/\nu},
+\eeq
+where the constant $C_x$ only depends on the value of $p_x$. Taking the difference between two values $p_{x_1}$ and $p_{x_2}$ we get
+\beq
+\label{eq:p_x_diff}
+p_{x_1} - p_{x_2} = (C_{x_1} - C_{x_2})L^{-1/\nu}.
+\eeq
+
+
+
+\subsection*{Conductivity, $\sigma(\xi,L)$, and conductance, $G(\xi,L)$}
+The conductance of a percolating system tells you how easily a fluid can flow through the system. It is defined by
+\beq
+\label{eq:conductance_def}
+G(\xi,L) = \frac{\Phi}{\Delta P},
+\eeq
+where $\Delta P$ is the pressure difference across the system and $\Phi$ is the total volume flux. The conductance is a system property.
+
+Another quantity of interest is the conductivity, which is a material property. For a system with cross sectional area $A$ and length $L$ the conductance and conductivity are related through
+\bdi
+G(\xi,L) = \sigma(\xi,L)\frac{A}{L} = \sigma(\xi,L)\frac{L^{d-1}}{L} = \sigma(\xi,L)L^{d-2},
+\edi
+where $d$ is the number of spatial dimensions. We notice that for a two dimensional system the conductance and conductivity are the same.
+
+For a system of size $L$ and with $p=p_c$, we have $\xi = \infty$. We then expect the conductance to depend on the size $L$ through the power law
+\beq
+\label{eq:G}
+G(\infty,L) \propto L^{-\tilde\zeta_R}.
+\eeq
+
+What about systems with $p>p_c$? We can divide such a system into $(L/\xi)^d$ subsystems of size $\xi$. Each such subsystem will behave as if it is at $p=p_c$ and therefore have a
+conductance $G(\infty, \xi)$. The total conductance is then
+\bdi
+G(\xi,L) = \Big(\frac{L}{\xi}\Big)^{d-2} G(\infty,\xi).
+\edi
+From this we can also find the conductivity of the system:
+\begin{eqnarray}
+\sigma(\xi,L) &=& L^{-(d-2)}G(\xi,L) = \frac{G(\infty,\xi)}{\xi^{d-2}} \propto \xi^{-(d-2+\tilde\zeta_R)} \nonumber\\
+\sigma(\xi,L) &\propto& (p-p_c)^{\nu(d-2+\tilde\zeta_R)} \propto (p-p_c)^\mu, \label{eq:sigma}
+\end{eqnarray}
+where we have introduced the exponent
+
+\beq
+\label{eq:mu}
+\mu = \nu(d-2+\tilde\zeta_R).
+\eeq
+%Consider a percolating system of size $L$ and with $p>p_c$. The conductance is defined as
+%\bdi
+%G(\xi,L) = \frac{\Phi}{\Delta P},
+%\edi
+%where $\Delta P$ is the pressure difference between drop across the system and $\Phi$ is the total volume flux. The conductivity $\sigma(\xi,L)$, which is regarded as a material property, is defined through the relation
+%\bdi
+%G(\xi,L) = \sigma(\xi,L)\frac{A}{L},
+%\edi
+%where $A$ is the cross sectional area and $L$ is the length of the system. For a system in $d$ spatial dimensions we get
+%\bdi
+%G(\xi,L) = \sigma(\xi,L)\frac{L^{d-1}}{L} = \sigma(\xi,L)L^{d-2}.
+%\edi
+%Thus for a two dimenasional system the conductance and conductivity are equal.
+
+
+
+
+
+
+
+
+\section*{Calculations and results}
+\subsection*{Measuring the exponent $\beta$}
+For $p>p_c$ the probability $P(p,L)$ for a given site to belong to the percolating cluster has the form
+\beq
+\label{eq:beta}
+P(p,L) \propto (p-p_c)^\beta.
+\eeq
+Our first task is to measure the exponent $\beta$. This was done by estimating $P(p,L)$ for 20 linearly spaced values of $p\in[0.595, 0.700]$. For each $p$-value, the probability $P(p,L)$ was calculated
+as an average over 200 systems. The system size was set to $L=500$.
+
+If we make a log-log-plot of $P(p,L)$ versus $p$, we should according to equation (\ref{eq:beta}) get a linear curve with slope $\beta$. Figure \ref{fig:pVersusP} shows that this is approximately the case. In order to estimate
+$\beta$, the the derivative of the (approximately) linear curve was calculated and plotted. It is shown in figure \ref{fig:beta}. From this figure we see that $\beta\approx0.16-0.17$ if we disregard the values closest to $p_c$.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Regular plot.]{
+            \label{fig:pVersusPReg}
+            \includegraphics[width=0.45\textwidth]{../Code/pVersusP.pdf}
+        }\hspace{5mm}
+        \subfigure[Log-log-plot.]{
+           \label{fig:pVersusPLogLog}
+           \includegraphics[width=0.45\textwidth]{../Code/pVersusPLogLog.pdf}
+        }\\ 
+    \end{center}
+    \caption{Regular plot and log-log-plot of $P(p,L)$ versus $p$.}
+    \label{fig:pVersusP}
+\end{figure}
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.50\textwidth]{../Code/betaVersusP.pdf}
+	\caption{Plot of equation $\beta$ versus $p-p_c$.}
+	\label{fig:beta}
+    \end{center}
+\end{figure}
+
+
+
+\subsection*{Determining the exponent of power-law distributions}
+First we generate a vector $w$ of uniformly distributed random numbers in the interval $[0, 1]$. Then we calculate the vector $z=1/w^2$. Our task is to determine the distribution function $f_Z(z)$ of the
+numbers $z$.
+
+We start by finding the cumulative distribution $F(Z) = P(Z<z)$. Because the highest numbers of the distribution are very sparse, logarithmic binning was used. Once we know $F(z)$ we can find the distribution
+itself from
+\bdi
+f_Z(z) = \frac{dF(z)}{dz}.
+\edi
+$F(z)$ and $f_Z(z)$ are plotted in figures \ref{fig:F} and \ref{fig:fVersusZ} respectively. Figure \ref{fig:logFVersusLogZ} shows a log-log-plot of $f_Z(z)$. Since the curve is a straight line, we know that
+$f_Z(z)$ follows a power law
+\bdi
+f_Z(z) \propto z^\alpha
+\edi
+and that the exponent $\alpha$ is given by the slope of the curve. From the curve it is estimated that $\alpha = -1.49 \pm 0.03$.
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.50\textwidth]{../Code/pVersusLogZ.pdf}
+	\caption{Plot of $F(z)$ versus $\log(z)$.}
+	\label{fig:F}
+    \end{center}
+\end{figure}
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[$f_Z(z)$ versus $\log(z)$.]{
+            \label{fig:fVersusLogZ}
+            \includegraphics[width=0.45\textwidth]{../Code/fVersusLogZ.pdf}
+        }\hspace{5mm}
+        \subfigure[$\log(f_Z(z))$ versus $\log(z)$.]{
+           \label{fig:logFVersusLogZ}
+           \includegraphics[width=0.45\textwidth]{../Code/logFVersusLogZ.pdf}
+        }\\ 
+    \end{center}
+    \caption{Plots of the distribution $f_Z(z)$.}
+    \label{fig:fVersusZ}
+\end{figure}
+
+
+
+
+\subsection*{Cluster number density, $n(s,p)$}
+We want to estimate the cluster number density, $n(s,p)$ as a function of $s$ for various values of $p$ near $p_c$. This is done by making a histogram of the cluster areas for values of $p$ below and
+above $p_c$. The results are shown in figure \ref{fig:nsp}.
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[$p<p_c$.]{
+            \label{fig:nspBelowPc}
+            \includegraphics[width=0.45\textwidth]{../Code/nspBelowPc.pdf}
+        }\hspace{5mm}
+        \subfigure[$p>p_c$.]{
+           \label{fig:nspAbovePc}
+           \includegraphics[width=0.45\textwidth]{../Code/nspAbovePc.pdf}
+        }\\ 
+    \end{center}
+    \caption{Plots of $n(s,p)$ as a function of $s$ for different values of $p$ near $p_c$.}
+    \label{fig:nsp}
+\end{figure}
+
+As discussed in the theory section, one often assumes that the cluster number density can be written as
+\bdi
+n(s,p) = s^{-\tau}F(s/s_\xi),
+\edi
+where $F(u)$ is a cut-off funtion and $s_\xi$ is the characteristic cluster mass. $F(u)$ is approximately constant for $u<1$.
+
+Next we want to estimate the exponent $\tau$. One trick we can use, is to set $p=p_c$; $s_\xi$ will then diverge, and we will have $F(s/s_\xi) = F(0) =$ constant for all values of s.
+Thus we can plot the term $s^{-\tau}$ directly:
+\bdi
+n(s,p_c) = s^{-\tau}F(s/s_\xi) = s^{-\tau}F(s/\infty) = s^{-\tau}F(0) \propto s^{-\tau}.
+\edi
+
+Not surprisingly, we get different values of $\tau$ depending on the system size $L$. This is a general feature of our simulations:
+we can never get exact values as long as we are dealing with finite systems. But we can vary the system size and look for a trend in the measured values, and thereafter we can extrapolate
+to get values for a system of infinite size.
+
+Figure \ref{fig:ex_f_nsp} shows a log-log-plot of $n(s,p_c)$ for different system sizes. The exponent $\tau$ is given by the slope of these curves. Figure \ref{fig:ex_f_tau} shows the measured values
+as a function of system size $L$. We see that the exponent is strongly size dependent, but it seems to approach some definite value as $L\rightarrow\infty$. I have not pursued this analysis any further, but 
+according to the lecture notes, we should get $\tau\rightarrow2.0549\dots$ as $L\rightarrow\infty$.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Log-log-plot of $n(s,p_c)$ versus $s$.]{
+            \label{fig:ex_f_nsp}
+            \includegraphics[width=0.45\textwidth]{../Code/ex_f_nsp.pdf}
+        }\hspace{5mm}
+        \subfigure[$\tau$ versus $L$.]{
+           \label{fig:ex_f_tau}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_f_tau.pdf}
+        }\\ 
+    \end{center}
+    \caption{Measurements of the exponent $\tau$. Figure (a) shows a log-log-plot of $n(s,p_c)$ as a function of $s$ for various system sizes $L$. The exponent $\tau$, which is equal to the slope of
+             these curves, is shown as a function of $L$ in figure (b).}
+    \label{fig:ex_f}
+\end{figure}
+
+
+We can also find how the characteristic mass $s_\xi$ varies with the parameter $p$. How do we do this? Using our scaling ansatz for $n(s,p)$ we can write
+\bdi
+\frac{n(s,p)}{n(s,p_c)} = \frac{s^{-\tau}F(s/s_\xi)}{s^{-\tau}F(s/\infty)} = \frac{s^{-\tau}F(s/s_\xi)}{s^{-\tau}F(0)} = F(s/s_\xi).
+\edi
+This means that if we plot $n(s,p)/n(s,p_c)$ we actually see $F(s/s_\xi)$ as a function of $s$. A plot of $F(s/s_\xi)$ for various values of $p$ is shown in figure \ref{fig:ex_g_F}.
+The system size has been set to $L = 1024$. From the figure we see that the cut-off occurs for larger values of $s$ as we increase $p$, which is as expected. The function $F(s/s_\xi)$ is only
+approximately a step function, which means that $s_\xi$ is not accurately defined. In my calculations I have defined $s_\xi$ as the value of $s$ where $F = 0.5$. Using this we can make the plot shown in
+figure \ref{fig:ex_g_sxi}, which shows $\log(s_\xi)$ as a function of $\log|p-p_c|$. According to our scaling ansatz (\ref{eq:s_xi}) we see that the slope of this line is equal to $-1/\sigma$.
+From the calculations we arrive at $\sigma = 0.41$.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[$\log(F(s/s_\xi)) $ versus $\log(s)$.]{
+            \label{fig:ex_g_F}
+            \includegraphics[width=0.45\textwidth]{../Code/ex_g_F.pdf}
+        }\hspace{5mm}
+        \subfigure[$\log(s_\xi)$ versus $\log|p-p_c|$.]{
+           \label{fig:ex_g_sxi}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_g_sxi.pdf}
+        }\\ 
+    \end{center}
+    \caption{Measurement of the exponent $\sigma$. Figure (a) shows a plot of $\log(F(s/s_\xi)) $ versus $\log(s)$ for various values of $p$. The characteristic cluster size $s_\xi$ is measured
+             for each value of $p$, and $\log(s_\xi)$ is plotted versus $\log|p-p_c|$ in figure (b). The slope of the line in (b) is equal to $-1/\sigma$. The measured value is $\sigma = 0.41$.}
+    \label{fig:ex_g}
+\end{figure}
+
+
+
+
+
+
+\subsection*{Mass scaling of percolating cluster}
+The mass of the percolating cluster should follow the power law in equation (\ref{eq:mass_perc}). We can determine the exponent $D$ by measuring the mass of the percolating cluster of systems with different
+sizes and plotting $\log(M(L))$ versus $\log(L)$. Figure \ref{fig:ex_h} shows such a plot. As usual, the slope of this curve is equal to the exponent. The measurements give $D = 1.87$.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.50\textwidth]{../Code/ex_h.pdf}
+	\caption{Plot of $\log(M(L))$ versus $\log(L)$.}
+	\label{fig:ex_h}
+    \end{center}
+\end{figure}
+
+
+
+\subsection*{Finite size scaling}
+Let us define $p_{\Pi=x}$ so that
+\bdi
+\Pi(p_{\Pi=x}) = x.
+\edi
+We want to estimate $p_{\Pi=x}$ as a function of system size $L$ for $x=0.3$ and $x=0.8$. For a given system size $L$ we can find $p_{\Pi=x}$ in the following way:
+\begin{itemize}
+ \item Pick a starting value $p = p_{initial}$.
+ \item For $n\in[1,\,2,\,\dots\,N]$ do:
+   \begin{itemize}
+     \item Generate a system and check if it is percolating.
+     \item If it is percolating, set $i = i + 1$.
+   \end{itemize}
+ \item Set $\Pi(p) = i/N$.
+ \item If $x - \Pi(p) < 0$ set $p = p + \Delta p$.
+ \item If $x - \Pi(p) > 0$ set $p = p - \Delta p$.
+ \item If $x - \Pi(p)$ changes sign from previous iteration, set $\Delta p = \Delta p/2$.
+ \item When $\Delta p < p_{tolerance}$, set $p_{\Pi=x} = p$ and quit iterating.
+\end{itemize}
+This algorithm with $N=1000$ and $p_{tolerance} = 0.001$ gives the plot shown in figure \ref{fig:ex_i_p}. We can also estimate the factor $\nu$ by making a log-log-plot of equation (\ref{eq:p_x_diff}),
+see figure \ref{fig:ex_i_pdiff}. The slope of the curve in this figure is equal to $-1/\nu$. The curve is not a perfectly straight line, so it is not possible to get a definite value for $\nu$. If we
+use the slope between the first and the third datapoint, we get the value $\nu = 1.31$. 
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[$p_{\Pi=0.3}$ and $p_{\Pi=0.8}$ versus $L$.]{
+            \label{fig:ex_i_p}
+            \includegraphics[width=0.45\textwidth]{../Code/ex_i_p_vs_L.pdf}
+        }\hspace{5mm}
+        \subfigure[$\log(p_{\Pi=0.8}-p_{\Pi=0.3})$ versus $\log(L)$.]{
+           \label{fig:ex_i_pdiff}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_i_logpdiff_vs_logl.pdf}
+        }\\ 
+    \end{center}
+    \caption{Measurement of the exponent $\nu$. Figure (a) shows $p_{\Pi=x}$ as a function of $L$ for $x=0.3$ and $x=0.8$, and figure (b) shows a log-log-plot of the difference between the two graphs.
+	     The slope of the curve is equal to $-1/\nu$.
+             If we use the first and the third data point to calculate the slope, we get $\nu = 1.31$.}
+    \label{fig:ex_i}
+\end{figure}
+
+Now that we know the value of $\nu$, we can make an estimate of $p_c$ by plotting equation \ref{eq:p_x} as a function of $L^{-1/\nu}$. We should then get two straight lines which, when extrapolated towards
+$L^{-1/\nu}=0$, should cross the $p$ axis at $p_c$. Figure \ref{fig:ex_k_p} shows a plot of our datapoints together with two best fitted linear functions. The two lines $p_{\Pi=0.3}$ and $p_{\Pi=0.8}$ cross the $p$-axis
+at 0.5926 and 0.5928 respectively. Our best estimate for the percolation threshold is therefore $p_c=0.5927$, which is surprisingly close to the exact value.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.70\textwidth]{../Code/ex_k_p.pdf}
+	\caption{Plot of $p_{\Pi=0.3}$ and $p_{\Pi=0.8}$ as functions of $L^{-1/\nu}$. The black dots are the datapoints and the straight lines are the best fitted linear functions.}
+	\label{fig:ex_k_p}
+    \end{center}
+\end{figure}
+
+
+
+
+
+\subsection*{Singly connected bonds}
+In the next section we will study flow through percolating systems at $p=p_c$. Once we have percolation, we know that we can get from one side to the other by walking along occupied sites.
+
+Imagine a walker standing at a site belonging to the percolating cluster at one of the boundaries. There is an almost infinite number of paths the walker can choose from in order to reach the opposite side. Let us say that
+the walker is not allowed to cross the same site twice (the walker is self avoiding). The set of all paths the self avoiding walker can take from one side to the other is called the backbone. The sites
+belonging to these paths are the only ones which contribute to flow. The remaning sites of the percolating cluster are collectively called the dangling ends.
+
+A typical feature of systems at $p=p_c$ is that there will be some sites through which all of the connecting paths will cross. We call them the singly connected bonds. If we block any of the singly connected bonds,
+there can be no flow through the system.
+
+So how can we locate the singly connected bonds of a system? One way is to use so-called left-turning and right-turning walkers. A left-turning walker always tries to turn left with respect to its previous direction.
+If this site is empty, it tries the next best option, which is to move straight ahead, and so on. A right-turning walker is defined similarly. If a walker of type left-turning and type right-turning are placed at a
+site belonging to the percolating cluster at one of the boundaries, they will push towards opposite sides of the cluster. The sites through which they both pass are part of the singly connected bonds.
+
+Figure \ref{fig:ex_l} shows the results from a simulation with a left- and a right-turning walker. The percolating cluster is shown in figure \ref{fig:ex_l_perc_cluster}.
+Figures \ref{fig:ex_l_left_turning} and \ref{fig:ex_l_right_turning} show the paths taken by the left-turning and right-turning walkers, respectively. The colors reflect how many times each site is visited.
+From figure \ref{fig:ex_l}, showing the singly connected bonds together with the percolating cluster, we see that the singly connected bonds constitute a very small part of the whole cluster.
+
+We are interested in how the mass of the singly connected bonds scales with system size. In other words, we want to find the expontent $D_{SC}$ of the proposted power law
+\bdi
+M_{SC} = L^{D_{SC}}.
+\edi
+In order to estimate this exponent, a simulation for $L\in\{2^k\}_{k=4}^9$ was run. From this a plot of $\log(M(L))$ versus $\log(L)$ was generated, see figure \ref{fig:ex_m}. From the slope of the curve
+the exponent was found to be $D_{SC} = 0.87$.
+
+
+
+\begin{figure}[!ht]
+    \begin{center}
+        \subfigure[Percolating cluster.]{
+            \label{fig:ex_l_perc_cluster}
+            \includegraphics[width=0.45\textwidth]{../Code/ex_l_perc_cluster.pdf}
+        }\hspace{5mm}
+        \subfigure[Percolating cluster and backbone.]{
+           \label{fig:ex_l_singly_connected2}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_l_singly_connected2.pdf}
+        }\hspace{5mm}
+        \subfigure[Path taken by left-turning walker.]{
+           \label{fig:ex_l_left_turning}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_l_left_turning.pdf}
+        }\hspace{5mm}
+        \subfigure[Path taken by right-turning walker.]{
+           \label{fig:ex_l_right_turning}
+           \includegraphics[width=0.45\textwidth]{../Code/ex_l_right_turning.pdf}
+        }\\
+    \end{center}
+    \caption{Plots of percolating cluster, backbone, path taken by left-turning walker and path taken by right-turning walker. The system size is $L=100$.}
+    \label{fig:ex_l}
+\end{figure}
+
+
+\begin{figure}[!ht]
+    \begin{center}
+	\includegraphics[width=0.60\textwidth]{../Code/ex_m_logm_vs_logl.pdf}
+	\caption{Plot of $\log(M(L))$ versus $\log(L)$.}
+	\label{fig:ex_m}
+    \end{center}
+\end{figure}
+
+
+
+\subsection*{Flow on fractals}
+
+Next we wanted to study flow through the spanning cluster. Our first aim was to find the singly connected bonds, the backbone and the dangling ends and measure their dimensionality (i.e. find
+the exponents $D$ in $M=L^D$.)
+Thereafter we determined the conductivity (which is equal to the conductance for $d=2$, see the theory section) as a function
+of $p-p_c$. Lastly we investigated how the conductivity varies as a function of system size $L$.
+
+By running a series of $N=500$ experiments for system sizes $L\in\{2^k\}_{k=4}^9$ the dimensional exponents of the masses of the singly connected bonds, backbone and dangling ends were measured
+by making the usual log-log-plots. The results are:
+\begin{eqnarray*}
+ D_{SC} & = & 1.52 \\
+ D_{BB} & = & 0.87 \\
+ D_{DE} & = & 1.96. 
+\end{eqnarray*}
+
+
+Next we measured the exponent $\mu$ of equation (\ref{eq:sigma}). We did this by generating $N=50$ systems of size $L=512$ for 11 values of $p$ in the range [0.60, 0.90]. For each system we applied a pressure difference
+$\Delta P = 1$ and measured the total flux through the system. From equation (\ref{eq:conductance_def}) we see that, since $\Delta P = 1$, the flux is equal to the conductivity. The measurements gave
+$\mu = 1.24$.
+
+Finally we measured the exponent $\tilde\zeta_R$ of equation (\ref{eq:G}). It was done in the same manner as before:
+The conductance was measured for $N=100$ systems of the sizes $L\in\{2^k\}_{k=4}^9$. The measurements gave $\tilde\zeta_R = 1.24$.
+
+From equation (\ref{eq:mu}) we can conclude that the measured values are fairly consistent.
+
+
+
+
+
+%\newpage
+%\begin{thebibliography}{10}
+%\bibitem{Marouchkine}Andrei Moraouchkine. Room-Temperature Superconductivity, Cambridge International Science Publishing.
+%\bibitem{supra}http://www.supraconductivite.fr/en/index.php?p=supra-levitation-phase-more
+%\bibitem{uio}http://www.mn.uio.no/fysikk/english/research/groups/amks/superconductivity/mo/
+%\bibitem{Mikheenko}P. N. Mikheenko, Yu. E. Kuzovlev. Inductance measurements of HTSC films with high critical currents, Physica C 204 (1993) 229-236.
+%\bibitem{morten}Morten Hjorth-Jensen. Computational Physics. Lecture Notes Fall 2011. University of Oslo, 2011.
+%\bibitem{fys}Young \& Friedman. University Physics, 11th edition, 2004.
+%\bibitem{stat}G.L. Squires. Practical Physics, 4th edition, 2001.
+%\bibitem{dimensjon}http://en.wikipedia.org/wiki/Buckingham
+%\bibitem{density}Wikipedia, http://en.wikipedia.org/wiki/Density\_of\_air
+%\bibitem{viscosity}http://en.wikipedia.org/wiki/Viscosity
+%\bibitem{diffus}Wikipedia, http://en.wikipedia.org/wiki/Thermal\_diffusivity
+
+%\end{thebibliography}
+
+\end{document}
